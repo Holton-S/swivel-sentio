@@ -1,0 +1,17 @@
+import { readFileSync } from 'node:fs';
+import vm from 'node:vm';
+import assert from 'node:assert/strict';
+const source=readFileSync(new URL('../public/app.js',import.meta.url),'utf8');
+const camera=source.slice(source.indexOf('const optical ='),source.indexOf("$('demo-mode').addEventListener"));
+const elements=new Map();
+const $=id=>{if(!elements.has(id))elements.set(id,{hidden:false,textContent:'',srcObject:null,setAttribute(){},addEventListener(type,fn){this[type]=fn;},play:async()=>{},getContext:()=>({})});return elements.get(id);};
+const context=vm.createContext({$,state:{bio:null},document:{createElement:()=>({getContext:()=>({})}),addEventListener(){}},navigator:{mediaDevices:{getUserMedia:async()=>{throw Error('denied')}}},performance:{now:()=>1000},renderVitals(){},requestAnimationFrame:()=>1,cancelAnimationFrame(){},Uint8ClampedArray});
+vm.runInContext(camera,context);
+await $('camera-button').click();
+assert.match($('optical-status').textContent,/permission declined/);assert.equal($('camera-stage').hidden,true);
+context.navigator.mediaDevices=undefined;await $('camera-button').click();assert.match($('optical-status').textContent,/unavailable/);
+let resolve,stops=0;const track={stop(){stops++;}};const stream={getTracks:()=>[track],getVideoTracks:()=>[track]};
+context.navigator.mediaDevices={getUserMedia:()=>new Promise(r=>resolve=r)};
+const pending=$('camera-button').click();await $('camera-button').click();resolve(stream);await pending;assert.equal(stops,1,'Cancelled late permission stream is stopped');assert.equal($('camera-video').srcObject,null);
+context.navigator.mediaDevices={getUserMedia:async()=>stream};await $('camera-button').click();assert.equal($('camera-stage').hidden,false);assert.equal($('camera-video').srcObject,stream);await $('camera-button').click();assert.equal(stops,2);assert.equal($('camera-video').srcObject,null);
+console.log('Camera lifecycle checks passed: denial, unsupported, late permission cancellation, successful start, track cleanup. Mocked device; no physical camera accessed.');

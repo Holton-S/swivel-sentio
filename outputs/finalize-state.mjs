@@ -1,0 +1,10 @@
+import {readFileSync,writeFileSync} from 'node:fs';
+const root=new URL('../public/',import.meta.url);let js=readFileSync(new URL('app.js',root),'utf8');
+js=js.replace('incidentBio: state.incidentBio }','incidentBio: state.incidentBio, selectedMode: state.selectedMode }');
+js=js.replace("'dispatch', 'incidentBio']","'dispatch', 'incidentBio', 'selectedMode']");
+js=js.replace("$('demo-mode').value = presets[scenario].mode;","$('demo-mode').value = state.selectedMode = presets[scenario].mode;");
+js=js.replace("$('demo-mode').value = 'calm';","$('demo-mode').value = state.selectedMode = 'calm';");
+js=js.replace("await api('/api/biometrics/mode',{mode}); if", "await api('/api/biometrics/mode',{mode}); state.selectedMode = mode; if");
+js=js.replace('  renderIntervention(); renderAudit(); setBusy(false);',"  $('demo-mode').value = ['calm','elevated','panic'].includes(state.selectedMode) ? state.selectedMode : '';\n  renderIntervention(); renderAudit(); setBusy(false);");
+writeFileSync(new URL('app.js',root),js);
+let html=readFileSync(new URL('index.html',root),'utf8');html=html.replace('<select id="demo-mode">','<select id="demo-mode"><option value="" disabled selected>Choose a level</option>');writeFileSync(new URL('index.html',root),html);

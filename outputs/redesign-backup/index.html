@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Swivel Sentio | Multimodal Coercion Defense & Social Engineering Shield</title>
+  <meta name="description" content="Real-time multi-agent defense pipeline pairing Presage optical biometrics, Gemini conversational coercion detection, Tiger Data timeseries rollups, and ElevenLabs empathetic voice intervention.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="index.css">
+</head>
+<body class="theme-default">
+  <!-- Top Navigation & System Status Bar -->
+  <header class="app-header">
+    <div class="header-brand">
+      <div class="brand-logo">
+        <span class="logo-shield">🛡️</span>
+        <span class="pulse-indicator online"></span>
+      </div>
+      <div class="brand-text">
+        <h1>Swivel Sentio</h1>
+        <p class="brand-tagline">Multimodal Coercion Defense Pipeline</p>
+      </div>
+    </div>
+
+    <!-- Integrations Badges -->
+    <div class="sponsor-badges">
+      <span class="badge badge-swivel">Swivel Shield</span>
+      <span class="badge badge-gemini">Gemini 2.5</span>
+      <span class="badge badge-presage">Presage rPPG</span>
+      <span class="badge badge-tiger">Tiger Data</span>
+      <span class="badge badge-eleven">ElevenLabs</span>
+    </div>
+
+    <!-- Accessibility & Settings Toolbar -->
+    <div class="header-actions">
+      <button id="btn-toggle-elderly" class="btn btn-secondary btn-icon" title="Toggle High Contrast Elderly Friendly View">
+        <span class="btn-icon-symbol">👁️</span>
+        <span class="btn-label">Elderly Assist</span>
+      </button>
+      <button id="btn-run-qa" class="btn btn-primary btn-glow" title="Execute Pipeline QA/QC Suite">
+        <span class="btn-icon-symbol">⚡</span>
+        <span class="btn-label">Run QA/QC Audit</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Pipeline Control Grid -->
+  <main class="main-container">
+
+    <!-- Hero Alert Banner (Hidden by default, triggered during high risk) -->
+    <div id="safety-lock-banner" class="safety-banner hidden">
+      <div class="banner-icon">🚨</div>
+      <div class="banner-content">
+        <h2>SAFETY PAUSE ENGAGED: High-Pressure Coercion Detected</h2>
+        <p>Swivel has temporarily locked the transaction. We suspect someone is attempting to pressure you. Take a breath; you are in complete control.</p>
+      </div>
+      <div class="banner-action">
+        <button id="btn-request-caregiver" class="btn btn-danger">Contact Trusted Caregiver</button>
+      </div>
+    </div>
+
+    <div class="grid-layout">
+
+      <!-- COLUMN 1: Presage rPPG Optical Sensor & Biometrics Telemetry -->
+      <section class="card panel-biometrics">
+        <div class="card-header">
+          <div class="header-left">
+            <span class="section-icon">💓</span>
+            <div>
+              <h3>Presage rPPG Optical Telemetry</h3>
+              <p class="subtitle">Non-contact photoplethysmogram stress capture</p>
+            </div>
+          </div>
+          <span id="bio-mode-badge" class="status-pill status-calm">CALM</span>
+        </div>
+
+        <!-- Live Waveform Canvas -->
+        <div class="waveform-container">
+          <canvas id="ppgCanvas" width="480" height="130"></canvas>
+          <div class="waveform-overlay">
+            <span class="live-tag"><span class="red-dot"></span> LIVE rPPG STREAM</span>
+          </div>
+        </div>
+
+        <!-- Biometric Gauges -->
+        <div class="bio-metrics-grid">
+          <div class="metric-box">
+            <span class="metric-label">Heart Rate</span>
+            <div class="metric-value-row">
+              <span id="val-heartRate" class="metric-value">72</span>
+              <span class="metric-unit">BPM</span>
+            </div>
+            <div class="metric-bar-bg"><div id="bar-heartRate" class="metric-bar-fill" style="width: 45%;"></div></div>
+          </div>
+
+          <div class="metric-box">
+            <span class="metric-label">Acute Stress Index</span>
+            <div class="metric-value-row">
+              <span id="val-stressIndex" class="metric-value">18</span>
+              <span class="metric-unit">/ 100</span>
+            </div>
+            <div class="metric-bar-bg"><div id="bar-stressIndex" class="metric-bar-fill" style="width: 18%;"></div></div>
+          </div>
+
+          <div class="metric-box">
+            <span class="metric-label">Respiration Rate</span>
+            <div class="metric-value-row">
+              <span id="val-respiratoryRate" class="metric-value">16</span>
+              <span class="metric-unit">BrPM</span>
+            </div>
+            <div class="metric-bar-bg"><div id="bar-respiratoryRate" class="metric-bar-fill" style="width: 40%;"></div></div>
+          </div>
+
+          <div class="metric-box">
+            <span class="metric-label">HRV (RMSSD)</span>
+            <div class="metric-value-row">
+              <span id="val-hrv" class="metric-value">54</span>
+              <span class="metric-unit">ms</span>
+            </div>
+            <div class="metric-bar-bg"><div id="bar-hrv" class="metric-bar-fill" style="width: 70%;"></div></div>
+          </div>
+        </div>
+
+        <!-- Biometric Simulator Controls -->
+        <div class="simulator-controls">
+          <span class="control-label">Sensor Stimulation:</span>
+          <div class="btn-group">
+            <button class="btn btn-outline active" data-bio-mode="calm">Calm Baseline</button>
+            <button class="btn btn-outline" data-bio-mode="elevated">Agitated / Scared</button>
+            <button class="btn btn-outline" data-bio-mode="panic">Severe Coercion Panic</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- COLUMN 2: Conversational Social Engineering Interceptor (Gemini API) -->
+      <section class="card panel-detection">
+        <div class="card-header">
+          <div class="header-left">
+            <span class="section-icon">🧠</span>
+            <div>
+              <h3>Gemini Multimodal Coercion Guard</h3>
+              <p class="subtitle">Real-time semantic risk and psychological pressure scoring</p>
+            </div>
+          </div>
+          <div id="risk-pill" class="status-pill status-low">LOW RISK: 0/100</div>
+        </div>
+
+        <!-- High-Visibility Preset Scenarios -->
+        <div class="preset-scenarios">
+          <div class="preset-callout">
+            <span class="callout-icon">👇</span>
+            <strong>CLICK A TEST BUTTON TO SIMULATE AN ATTACK:</strong>
+          </div>
+          <div class="preset-buttons">
+            <button class="btn btn-attack btn-attack-irs" data-preset="irs">
+              <span class="attack-icon">🚨</span>
+              <span class="attack-title">IRS Arrest Threat</span>
+            </button>
+            <button class="btn btn-attack btn-attack-grandson" data-preset="grandson">
+              <span class="attack-icon">🚑</span>
+              <span class="attack-title">Grandchild Emergency Wire</span>
+            </button>
+            <button class="btn btn-attack btn-attack-geeksquad" data-preset="geeksquad">
+              <span class="attack-icon">💻</span>
+              <span class="attack-title">Geek Squad Gift Cards</span>
+            </button>
+            <button class="btn btn-attack btn-attack-utility" data-preset="utility">
+              <span class="attack-icon">💡</span>
+              <span class="attack-title">Normal Utility Payment</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Audio Transcript & Input Area -->
+        <div class="input-section">
+          <label for="transcript-input" class="input-label">
+            <span>Conversational Audio Stream / Transcript:</span>
+            <span id="mic-status" class="mic-status">Mic Idle</span>
+          </label>
+          <textarea id="transcript-input" rows="4" placeholder="Speak or paste audio transcript here... (e.g., 'This is Officer Miller from the IRS, wire money immediately or face arrest...')"></textarea>
+          
+          <div class="input-footer">
+            <button id="btn-toggle-mic" class="btn btn-secondary btn-icon">
+              <span class="btn-icon-symbol">🎙️</span>
+              <span id="mic-btn-text">Start Mic Capture</span>
+            </button>
+            <button id="btn-run-detect" class="btn btn-primary">
+              <span>Analyze Threat</span>
+              <span id="analysis-latency" class="pill-mini">0.0ms</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Detected Coercion Dimensions & Indicators -->
+        <div class="risk-breakdown">
+          <h4>Coercion Indicators Detected:</h4>
+          <div class="tag-cloud" id="indicator-tags">
+            <span class="tag-placeholder">No coercion patterns active</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- COLUMN 3: Swivel Intercepted Checkout & Dual-Custody Approval -->
+      <section class="card panel-checkout">
+        <div class="card-header">
+          <div class="header-left">
+            <span class="section-icon">💳</span>
+            <div>
+              <h3>Swivel Protected Checkout</h3>
+              <p class="subtitle">Frictionless transaction security with behavioral pause</p>
+            </div>
+          </div>
+          <span class="badge badge-swivel">SWIVEL APPLIED</span>
+        </div>
+
+        <div class="checkout-box">
+          <div class="checkout-row">
+            <span class="checkout-label">Payee / Recipient:</span>
+            <input type="text" id="chk-recipient" class="form-input" value="Federal Treasury Bureau (Direct Wire)">
+          </div>
+          <div class="checkout-row">
+            <span class="checkout-label">Payment Amount:</span>
+            <div class="currency-input-wrap">
+              <span class="currency-symbol">$</span>
+              <input type="number" id="chk-amount" class="form-input form-input-bold" value="2500">
+            </div>
+          </div>
+          <div class="checkout-row">
+            <span class="checkout-label">Payment Rail:</span>
+            <select id="chk-rail" class="form-input">
+              <option value="WIRE">Immediate Wire Transfer</option>
+              <option value="GIFT_CARD">Apple / Target Gift Cards</option>
+              <option value="CRYPTO">Bitcoin ATM / Crypto</option>
+              <option value="ACH">Standard Bank ACH (2 Business Days)</option>
+            </select>
+          </div>
+
+          <div class="checkout-status-display">
+            <div id="checkout-verdict" class="verdict-banner verdict-safe">
+              <span class="verdict-icon">✓</span>
+              <div>
+                <strong>Transaction Status: NORMAL</strong>
+                <p>No anomalous coercion signals detected.</p>
+              </div>
+            </div>
+          </div>
+
+          <button id="btn-submit-payment" class="btn btn-block btn-pay">
+            <span>Proceed with Transaction</span>
+          </button>
+        </div>
+
+        <!-- ElevenLabs Voice Intervention Widget -->
+        <div class="voice-intervention-widget" id="voice-widget">
+          <div class="voice-header">
+            <span class="voice-icon">🔊</span>
+            <div>
+              <h4>ElevenLabs Grounding Intervention</h4>
+              <p id="voice-speaker" class="subtitle">Rachel (Warm Caregiver Voice)</p>
+            </div>
+          </div>
+          <div class="voice-body">
+            <p id="voice-transcript" class="voice-quote">"Take a slow breath. Official agencies never require gift cards or wire transfers under threat of arrest. You are completely safe."</p>
+            <div class="voice-actions">
+              <button id="btn-play-voice" class="btn btn-sm btn-secondary">
+                <span>▶ Play Audio Intervention</span>
+              </button>
+              <audio id="audio-player" style="display:none;"></audio>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- COLUMN 4: Caregiver Dual-Custody Consensus & SMS Log -->
+      <section class="card panel-caregiver">
+        <div class="card-header">
+          <div class="header-left">
+            <span class="section-icon">👨‍👩‍👧</span>
+            <div>
+              <h3>Caregiver Dual-Party Consensus</h3>
+              <p class="subtitle">Trusted contact verification protocol</p>
+            </div>
+          </div>
+          <span id="caregiver-status-pill" class="status-pill status-calm">IDLE</span>
+        </div>
+
+        <div class="caregiver-terminal">
+          <div class="terminal-header">
+            <span>SMS Dispatch to: (512) 555-0199 (Emily Souquette - Daughter)</span>
+          </div>
+          <div class="terminal-body" id="sms-log">
+            <div class="sms-message sms-system">
+              <span class="sms-time">12:00 PM</span>
+              <span class="sms-text">Caregiver guard active. Monitoring for high-stress transaction authorization.</span>
+            </div>
+          </div>
+          <div class="terminal-controls" id="caregiver-action-controls" style="display: none;">
+            <div class="caregiver-prompt">
+              <strong>Action Required:</strong> A $2,500 transaction was flagged under severe coercion pressure.
+            </div>
+            <div class="btn-group-dual">
+              <button id="btn-caregiver-veto" class="btn btn-danger">🚫 VETO & BLOCK TRANSFER</button>
+              <button id="btn-caregiver-approve" class="btn btn-outline">ALLOW TRANSFER</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- COLUMN 5: Tiger Data Postgres Timeseries Rollup Explorer -->
+      <section class="card panel-tigerdata">
+        <div class="card-header">
+          <div class="header-left">
+            <span class="section-icon">🐯</span>
+            <div>
+              <h3>Tiger Data PostgreSQL Hypertable</h3>
+              <p class="subtitle">Timeseries vital rollups & immutable audit trail</p>
+            </div>
+          </div>
+          <span class="badge badge-tiger">HYPERTABLE ACTIVE</span>
+        </div>
+
+        <div class="tigerdata-stats">
+          <div class="tiger-stat-card">
+            <span class="tiger-label">Total Vital Records</span>
+            <span id="tiger-total-samples" class="tiger-val">0</span>
+          </div>
+          <div class="tiger-stat-card">
+            <span class="tiger-label">Security Incidents</span>
+            <span id="tiger-total-incidents" class="tiger-val">0</span>
+          </div>
+          <div class="tiger-stat-card">
+            <span class="tiger-label">Hypertable Chunk Size</span>
+            <span class="tiger-val">1 Day</span>
+          </div>
+        </div>
+
+        <div class="code-preview-wrap">
+          <div class="code-header">
+            <span>SQL Schema & Continuous Aggregate DDL</span>
+            <button id="btn-refresh-tiger" class="btn-text">Refresh Data</button>
+          </div>
+          <pre class="code-block"><code id="tiger-ddl-display">-- Timeseries continuous aggregate rollup in Tiger Data
+SELECT time_bucket('1 minute', recorded_at) AS bucket,
+       AVG(heart_rate) AS avg_bpm,
+       MAX(stress_index) AS peak_stress,
+       COUNT(*) AS samples
+FROM patient_vital_stream
+GROUP BY bucket ORDER BY bucket DESC LIMIT 5;</code></pre>
+        </div>
+      </section>
+
+      <!-- COLUMN 6: Automated QA & QC Audit Console -->
+      <section class="card panel-qa">
+        <div class="card-header">
+          <div class="header-left">
+            <span class="section-icon">🧪</span>
+            <div>
+              <h3>Pipeline QA & QC Diagnostics</h3>
+              <p class="subtitle">System test runner, validation gates & latency benchmark</p>
+            </div>
+          </div>
+          <div id="qa-overall-pill" class="status-pill status-calm">9/9 PASSED (100%)</div>
+        </div>
+
+        <div class="qa-results-container">
+          <div class="qa-metrics-bar">
+            <div class="qa-metric">
+              <span class="qa-m-label">Inference Latency:</span>
+              <span id="qa-bench-latency" class="qa-m-val">0.013ms</span>
+            </div>
+            <div class="qa-metric">
+              <span class="qa-m-label">Throughput:</span>
+              <span id="qa-bench-throughput" class="qa-m-val">~76,000 req/s</span>
+            </div>
+            <div class="qa-metric">
+              <span class="qa-m-label">SLA Compliance:</span>
+              <span class="qa-m-val text-success">PASSED (&lt; 15ms)</span>
+            </div>
+          </div>
+
+          <div class="qa-test-list" id="qa-test-list">
+            <!-- Dynamically populated from /api/qa/run -->
+            <div class="qa-item test-passed">
+              <span class="qa-badge pass">PASS</span>
+              <span class="qa-name">SCAM-01: IRS Wire Fraud with Arrest Threat</span>
+              <span class="qa-ms">0.81ms</span>
+            </div>
+            <div class="qa-item test-passed">
+              <span class="qa-badge pass">PASS</span>
+              <span class="qa-name">SCAM-02: Grandchild Hospital Emergency</span>
+              <span class="qa-ms">0.44ms</span>
+            </div>
+            <div class="qa-item test-passed">
+              <span class="qa-badge pass">PASS</span>
+              <span class="qa-name">SCAM-03: Geek Squad Gift Card Demand</span>
+              <span class="qa-ms">0.03ms</span>
+            </div>
+            <div class="qa-item test-passed">
+              <span class="qa-badge pass">PASS</span>
+              <span class="qa-name">BENIGN-01 & 02: Normal Utility & Gift Payments</span>
+              <span class="qa-ms">0.02ms</span>
+            </div>
+            <div class="qa-item test-passed">
+              <span class="qa-badge pass">PASS</span>
+              <span class="qa-name">BIO-01: Presage rPPG Optical Sensor Stream Telemetry</span>
+              <span class="qa-ms">0.05ms</span>
+            </div>
+            <div class="qa-item test-passed">
+              <span class="qa-badge pass">PASS</span>
+              <span class="qa-name">TIGER-01: Tiger Data Postgres Relational Layer</span>
+              <span class="qa-ms">0.12ms</span>
+            </div>
+            <div class="qa-item test-passed">
+              <span class="qa-badge pass">PASS</span>
+              <span class="qa-name">VOICE-01: ElevenLabs Empathetic Audio Intervention</span>
+              <span class="qa-ms">0.09ms</span>
+            </div>
+            <div class="qa-item test-passed">
+              <span class="qa-badge pass">PASS</span>
+              <span class="qa-name">CARE-01: Caregiver Dual-Party Consensus Protocol</span>
+              <span class="qa-ms">0.04ms</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <footer class="app-footer">
+    <p>Swivel Sentio | Built for RowdyHacks XII | Sponsors: Swivel • Google Gemini • Presage • Tiger Data • ElevenLabs • Vultr • GoDaddy</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
