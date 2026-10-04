@@ -1,3 +1,4 @@
+import "./lib/env.js";
 import express from "express";
 import cors from "cors";
 import path from "path";
@@ -5,7 +6,8 @@ import { fileURLToPath } from "url";
 import { analyzeTranscript } from "./lib/detector.js";
 import { biometricEngine } from "./lib/biometrics.js";
 import { tigerData, TIGER_DATA_SCHEMA_DDL } from "./lib/tigerdata.js";
-import { generateInterventionScript } from "./lib/voice.js";
+import { generateInterventionScript, synthesizeSpeech } from "./lib/voice.js";
+import { analyzeWithGemini } from "./lib/gemini.js";
 import { caregiverNetwork } from "./lib/caregiver.js";
 import { pushEscalation, pushConfigured } from "./lib/notify.js";
 import { runAllTests } from "./tests/qa_qc_runner.js";
@@ -19,11 +21,19 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
+// Face-expression model is served locally so the demo works offline and video never leaves the device.
+app.use("/vendor/face-api", express.static(path.join(__dirname, "node_modules/@vladmandic/face-api/dist")));
+app.use("/vendor/face-models", express.static(path.join(__dirname, "node_modules/@vladmandic/face-api/model")));
 
-// --- 1. BIOMETRICS STREAM & SIMULATION ---
+// --- 1. SIMULATED STRESS TELEMETRY (stand-in for a future wearable / Presage SDK) ---
 app.get("/api/biometrics", (req, res) => {
   const sample = biometricEngine.generateSample();
-  tigerData.insertTelemetry(sample);
+  // When the camera check-in is live, the browser reports what it sees; store that reading instead.
+  const camStress = Number(req.query.stress);
+  const fromCamera = req.query.source === "camera" && Number.isFinite(camStress) && camStress >= 0 && camStress <= 100;
+  tigerData.insertTelemetry(fromCamera
+    ? { timestamp: sample.timestamp, stressIndex: Math.round(camStress), expression: String(req.query.expression || "").slice(0, 20) || null, expressionSource: "camera" }
+    : sample);
   res.json({ success: true, telemetry: sample });
 });
 
@@ -36,16 +46,18 @@ app.post("/api/biometrics/mode", (req, res) => {
   res.json({ success: true, mode });
 });
 
-// --- 2. MULTIMODAL COERCION DETECTION ENGINE (Gemini API pipeline) ---
-app.post("/api/detect", (req, res) => {
-  const { transcript, biometrics, transaction } = req.body;
+// --- 2. COERCION DETECTION: Google Gemini + offline keyword rules ---
+app.post("/api/detect", async (req, res) => {
+  const { transcript, biometrics, transaction, channel } = req.body;
   if (!transcript || typeof transcript !== "string") {
     return res.status(400).json({ error: "Transcript string required." });
   }
 
   const bioSample = biometrics || biometricEngine.generateSample();
+  const aiResult = await analyzeWithGemini(transcript, channel === "text" ? "text" : "call");
   const t0 = performance.now();
-  const analysis = analyzeTranscript(transcript, bioSample);
+  const analysis = analyzeTranscript(transcript, bioSample, aiResult);
+  analysis.channel = channel === "text" ? "text" : "call";
   const latencyMs = +(performance.now() - t0).toFixed(3);
 
   // If high or critical risk, record incident in Tiger Data audit log
@@ -60,6 +72,7 @@ app.post("/api/detect", (req, res) => {
     else if (/bitcoin|crypto|ethereum|coinstar/i.test(railHit)) paymentRail = "CRYPTO";
     else if (/zelle|venmo|cashapp|paypal/i.test(railHit)) paymentRail = "P2P_APP";
     else if (/cash|courier|envelope/i.test(railHit)) paymentRail = "CASH_COURIER";
+    else if (/https?:|www\.|\.(com|net|info|top|xyz|online|site)\b|fee|balance/i.test(railHit)) paymentRail = "LINK_IN_TEXT";
 
     incident = tigerData.recordIncident({
       score: analysis.score,
@@ -67,7 +80,9 @@ app.post("/api/detect", (req, res) => {
       amount: transaction?.amount || 0,
       recipient: transaction?.recipient || "Unknown",
       paymentRail,
-      flags: analysis.flags
+      flags: analysis.flags,
+      scamType: analysis.scamType,
+      evaluator: analysis.evaluator
     });
   }
 
@@ -86,7 +101,18 @@ app.post("/api/voice/intervention", (req, res) => {
     return res.status(400).json({ error: "Analysis object required." });
   }
   const script = generateInterventionScript(analysis);
-  res.json({ success: true, script });
+  res.json({ success: true, script, tts: process.env.ELEVENLABS_API_KEY ? "elevenlabs" : "browser" });
+});
+
+// Natural voice audio. 204 means "not configured": the browser uses its best local voice instead.
+app.post("/api/voice/speak", async (req, res) => {
+  const { text } = req.body || {};
+  if (!text || typeof text !== "string" || text.length > 1000) {
+    return res.status(400).json({ error: "Text (up to 1000 characters) required." });
+  }
+  const audio = await synthesizeSpeech(text);
+  if (!audio) return res.status(204).end();
+  res.set("Content-Type", "audio/mpeg").set("Cache-Control", "no-store").send(audio);
 });
 
 // --- 4. CAREGIVER DUAL-PARTY CONSENSUS ESCALATION ---
@@ -97,6 +123,7 @@ app.post("/api/caregiver/escalate", (req, res) => {
     analysis || { score: 95, riskTier: "CRITICAL", flags: {} },
     biometrics || biometricEngine.generateSample()
   );
+  tigerData.saveReview(escalation);
 
   // Fire an optional real-device push (ntfy). Non-blocking: never delays or
   // breaks the API response, whether or not NTFY_TOPIC is configured.
@@ -113,7 +140,15 @@ app.post("/api/caregiver/decision", (req, res) => {
     return res.status(400).json({ error: "authId and valid decision (APPROVE or VETO) required." });
   }
   const result = caregiverNetwork.resolveEscalation(authId, decision);
+  if (result.success) tigerData.saveReview(caregiverNetwork.getEscalation(authId));
   res.json({ success: true, result });
+});
+
+// The caregiver's phone (public/emily.html) polls this: the alert awaiting a decision, plus history.
+app.get("/api/caregiver/active", (req, res) => {
+  const recent = caregiverNetwork.getRecent(20);
+  const pending = recent.find(item => item.status === "PENDING_CAREGIVER_REVIEW") || null;
+  res.set("Cache-Control", "no-store").json({ success: true, escalation: pending, history: recent.filter(item => item !== pending) });
 });
 
 app.get("/api/caregiver/status/:id", (req, res) => {
@@ -123,11 +158,12 @@ app.get("/api/caregiver/status/:id", (req, res) => {
 });
 
 // --- 5. TIGER DATA POSTGRES TIMESERIES & AUDIT ---
-app.get("/api/tigerdata/rollup", (req, res) => {
-  const rollup = tigerData.getTelemetryRollup();
+app.get("/api/tigerdata/rollup", async (req, res) => {
+  const rollup = await tigerData.getStressRollup();
   const incidents = tigerData.getIncidents();
   res.json({
     success: true,
+    store: tigerData.mode,
     rollup,
     incidents,
     schemaDdl: TIGER_DATA_SCHEMA_DDL
@@ -146,4 +182,8 @@ app.get("/api/qa/run", (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`[Swivel Sentio] Production Pipeline & Defense Server running at http://localhost:${PORT}`);
+  // Connect to Tiger Cloud in the background; the server is usable (in memory) meanwhile.
+  tigerData.connect().then(async (live) => {
+    if (live) caregiverNetwork.restore(await tigerData.loadReviews(20));
+  });
 });

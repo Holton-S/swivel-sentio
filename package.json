@@ -9,7 +9,9 @@
     "test": "node tests/qa_qc_runner.js"
   },
   "dependencies": {
+    "@vladmandic/face-api": "^1.7.15",
+    "cors": "^2.8.5",
     "express": "^4.21.2",
-    "cors": "^2.8.5"
+    "pg": "^8.23.1"
   }
 }

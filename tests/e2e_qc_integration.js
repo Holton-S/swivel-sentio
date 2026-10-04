@@ -107,8 +107,8 @@ async function runE2EQC() {
     });
     if (!res.ok) throw new Error(`Status ${res.status}`);
     const data = await res.json();
-    if (!data.success || !data.script.text.includes("IRS")) {
-      throw new Error("Intervention script missing contextual threat keywords");
+    if (!data.success || !data.script.title.includes("Government") || /(irs|arrest|police)/i.test(data.script.text)) {
+      throw new Error("Intervention script picked the wrong scenario or repeats the threat");
     }
   });
 

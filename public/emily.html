@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#090d16">
+<title>Swivel Shield · Emily</title>
+<style>
+:root { --bg: #090d16; --text: #f8fafc; --green: #10b981; --amber: #f59e0b; --rose: #f43f5e;
+  --mint: color-mix(in srgb, var(--green) 42%, var(--text)); --muted: color-mix(in srgb, var(--text) 70%, var(--bg));
+  --line: color-mix(in srgb, var(--text) 16%, var(--bg)); --surface: color-mix(in srgb, var(--text) 5%, var(--bg)); color-scheme: dark; }
+* { box-sizing: border-box; margin: 0; }
+[hidden] { display: none !important; }
+body { min-height: 100svh; background: var(--bg); color: var(--text); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+  padding: calc(env(safe-area-inset-top, 0px) + 18px) 18px calc(env(safe-area-inset-bottom, 0px) + 24px); }
+.wrap { max-width: 460px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px; }
+header { display: flex; align-items: center; gap: 12px; }
+.badge-shield { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; background: color-mix(in srgb, var(--green) 38%, var(--bg)); }
+svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+header strong { display: block; font-size: 17px; }
+header small { color: var(--muted); font-size: 13px; }
+.live { margin-left: auto; font-size: 12px; color: var(--mint); display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+.live i { width: 8px; height: 8px; border-radius: 50%; background: var(--green); }
+.live.off { color: var(--amber); } .live.off i { background: var(--amber); }
+.card { border: 1px solid var(--line); background: var(--surface); border-radius: 20px; padding: 22px; }
+.quiet { text-align: center; padding: 42px 22px; }
+.quiet .big { font-size: 24px; font-weight: 600; margin: 14px 0 6px; color: var(--text); }
+.quiet p { color: var(--muted); }
+.quiet .badge-shield { width: 72px; height: 72px; margin: 0 auto; } .quiet svg { width: 34px; height: 34px; }
+.quiet { padding: 32px 22px 22px; }
+.status-rows { display: grid; gap: 10px; margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--line); text-align: left; }
+.on { color: var(--mint); }
+.just { margin-top: 16px; padding: 12px 14px; border-radius: 12px; font-size: 15px; text-align: left; color: var(--text) !important; background: color-mix(in srgb, var(--green) 14%, var(--bg)); border: 1px solid color-mix(in srgb, var(--green) 40%, var(--bg)); }
+.history h2 { font-size: 13px; letter-spacing: 1.4px; font-weight: 600; text-transform: uppercase; color: var(--muted); margin: 6px 4px 10px; }
+.history ol { list-style: none; padding: 0; display: grid; gap: 10px; }
+.history li { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; padding: 14px 16px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); }
+.history .what { font-weight: 600; } .history .meta { grid-column: 1 / -1; color: var(--muted); font-size: 13px; }
+.pill { font-size: 12px; font-weight: 600; padding: 3px 9px; border-radius: 20px; align-self: start; white-space: nowrap; }
+.pill.veto-pill { color: var(--mint); background: color-mix(in srgb, var(--green) 16%, var(--bg)); }
+.pill.approve-pill { color: var(--muted); background: color-mix(in srgb, var(--text) 8%, var(--bg)); }
+.empty { color: var(--muted); font-size: 14px; margin: 0 4px; }
+.alert { border-color: color-mix(in srgb, var(--rose) 60%, var(--bg)); background: color-mix(in srgb, var(--rose) 9%, var(--bg)); }
+.alert.done-veto { border-color: color-mix(in srgb, var(--green) 55%, var(--bg)); background: color-mix(in srgb, var(--green) 9%, var(--bg)); }
+.alert.done-approve { border-color: var(--line); background: var(--surface); }
+.eyebrow { font-size: 12px; letter-spacing: 1.4px; font-weight: 600; color: color-mix(in srgb, var(--rose) 55%, var(--text)); }
+.done-veto .eyebrow { color: var(--mint); } .done-approve .eyebrow { color: var(--muted); }
+.amount { font-size: 40px; font-weight: 650; letter-spacing: -1px; line-height: 1.1; margin-top: 10px; }
+.to { color: var(--muted); margin-top: 4px; }
+.facts { display: grid; gap: 10px; margin: 18px 0; padding: 16px 0; border-block: 1px solid var(--line); }
+.fact { display: flex; justify-content: space-between; gap: 12px; font-size: 15px; }
+.fact span:first-child { color: var(--muted); } .fact span:last-child { text-align: right; font-weight: 500; }
+.reason { font-size: 16px; line-height: 1.6; }
+.reason small { display: block; color: var(--muted); font-size: 12px; margin-top: 6px; }
+.actions { display: grid; gap: 10px; margin-top: 20px; }
+button { font: inherit; font-weight: 600; border-radius: 14px; min-height: 56px; padding: 0 18px; cursor: pointer; border: 1px solid transparent; color: var(--text); }
+button:disabled { opacity: .55; cursor: default; }
+button:focus-visible { outline: 3px solid var(--mint); outline-offset: 3px; }
+.veto { background: color-mix(in srgb, var(--rose) 55%, var(--bg)); border-color: var(--rose); font-size: 18px; }
+.approve { background: transparent; border-color: color-mix(in srgb, var(--text) 30%, var(--bg)); }
+.approve { min-height: 48px; font-weight: 500; color: var(--muted); }
+.approve.confirming { background: color-mix(in srgb, var(--amber) 28%, var(--bg)); border-color: var(--amber); color: var(--text); font-weight: 600; }
+.approve-note { text-align: center; color: var(--muted); font-size: 12px; margin-top: -2px; }
+.call { background: color-mix(in srgb, var(--green) 22%, var(--bg)); border-color: color-mix(in srgb, var(--green) 50%, var(--bg)); }
+.result { font-size: 20px; font-weight: 600; margin-top: 8px; }
+.foot { text-align: center; color: var(--muted); font-size: 12px; }
+.overlay { position: fixed; inset: 0; background: color-mix(in srgb, var(--bg) 92%, transparent); display: grid; place-items: center; padding: 24px; z-index: 5; }
+.overlay .card { text-align: center; width: min(100%, 360px); }
+.avatar { width: 72px; height: 72px; border-radius: 50%; margin: 0 auto 12px; display: grid; place-items: center; font-size: 30px; background: color-mix(in srgb, var(--green) 30%, var(--bg)); }
+@media (prefers-reduced-motion: no-preference) { .alert.pending { animation: pop .35s ease-out; } }
+@keyframes pop { from { transform: scale(.97); opacity: .4; } to { transform: none; opacity: 1; } }
+</style>
+</head>
+<body>
+<svg style="position:absolute;width:0;height:0" aria-hidden="true"><symbol id="shield" viewBox="0 0 24 24"><path d="m12 3 8 3v6c0 5-8 9-8 9s-8-4-8-9V6Z"/><path d="m8 12 3 3 5-6"/></symbol></svg>
+<div class="wrap">
+  <header>
+    <span class="badge-shield"><svg><use href="#shield"/></svg></span>
+    <div><strong>Swivel Shield</strong><small>Emily’s phone · Family protection</small></div>
+    <span id="live" class="live off"><i></i><span>Connecting</span></span>
+  </header>
+
+  <section id="quiet" class="card quiet" aria-live="polite">
+    <span class="badge-shield"><svg><use href="#shield"/></svg></span>
+    <p class="big">Granddad is protected</p>
+    <p>No payments are waiting for you.</p>
+    <p id="just-resolved" class="just" hidden></p>
+    <div class="status-rows">
+      <div class="fact"><span>Shield</span><span class="on">On</span></div>
+      <div class="fact"><span>Last checked</span><span id="checked">—</span></div>
+      <div class="fact"><span>Payments stopped</span><span id="stopped-count">0</span></div>
+    </div>
+  </section>
+
+  <section id="alert" class="card alert" hidden aria-live="assertive">
+    <span id="eyebrow" class="eyebrow">NEEDS YOUR REVIEW</span>
+    <div id="amount" class="amount"></div>
+    <div id="to" class="to"></div>
+    <div class="facts">
+      <div class="fact"><span>What it looks like</span><span id="scam-type"></span></div>
+      <div class="fact"><span>Risk</span><span id="risk"></span></div>
+      <div class="fact" id="mood-row"><span>Granddad</span><span id="mood"></span></div>
+      <div class="fact"><span>Received</span><span id="time"></span></div>
+    </div>
+    <p id="reason" class="reason"></p>
+    <p id="result" class="result" hidden></p>
+    <div id="actions" class="actions">
+      <button id="veto" class="veto">🚫 Veto &amp; block funds</button>
+      <button id="call" class="call">📞 Call Granddad</button>
+      <button id="approve" class="approve">Approve payment</button>
+      <p class="approve-note">Only approve after you’ve talked with Granddad.</p>
+    </div>
+  </section>
+
+  <section class="history" aria-labelledby="history-title">
+    <h2 id="history-title">Recent activity</h2>
+    <ol id="history-list"></ol>
+    <p id="history-empty" class="empty">Nothing yet. Paused payments will be listed here.</p>
+  </section>
+
+  <p class="foot">Demo · No real money moves and no real call is placed.</p>
+</div>
+
+<div id="overlay" class="overlay" hidden>
+  <div class="card"><div class="avatar">G</div><strong>Calling Granddad…</strong><p class="foot" style="margin:8px 0 18px">Demo call · No real call is placed</p><button id="hangup" class="veto" style="width:100%">End call</button></div>
+</div>
+
+<script>
+'use strict';
+const $ = id => document.getElementById(id);
+const money = n => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n || 0);
+let current = null, lastSeenId = null, busy = false, timer = null;
+const time = iso => new Date(iso).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+const kind = esc => esc.scamType && esc.scamType !== 'None' ? esc.scamType : (esc.coercionTriggers?.length ? 'Pressure tactics' : 'Protection rule');
+
+// The alert card only appears while a payment is waiting on Emily; otherwise the calm state shows.
+function renderAlert(esc) {
+  current = esc;
+  $('quiet').hidden = !!esc; $('alert').hidden = !esc;
+  if (!esc) return;
+  $('alert').className = 'card alert pending';
+  $('eyebrow').textContent = 'NEEDS YOUR REVIEW · PAYMENT PAUSED';
+  $('amount').textContent = money(esc.amount);
+  $('to').textContent = `to “${esc.recipient}”`;
+  $('scam-type').textContent = kind(esc);
+  $('risk').textContent = `${esc.riskScore ?? '?'}/100 · ${esc.riskTier || ''}`;
+  const mood = esc.vitalSigns?.expression;
+  $('mood-row').hidden = !mood;
+  $('mood').textContent = mood ? `Looks ${mood.toLowerCase()}` : '';
+  $('time').textContent = time(esc.createdAt);
+  const reason = esc.reason || (esc.coercionTriggers?.length ? `Signals heard: ${esc.coercionTriggers.slice(0, 4).join(' · ')}` : 'A protection rule paused this payment.');
+  $('reason').replaceChildren(document.createTextNode(reason));
+  if (esc.reason) { const small = document.createElement('small'); small.textContent = 'Explained by Google Gemini'; $('reason').append(small); }
+  $('result').hidden = true;
+  $('veto').hidden = $('approve').hidden = false;
+  $('veto').disabled = $('approve').disabled = busy;
+  if (esc.authId !== lastSeenId) navigator.vibrate?.([200, 100, 200]);
+  lastSeenId = esc.authId;
+}
+
+function renderCalm(history) {
+  $('checked').textContent = time(new Date().toISOString());
+  const resolved = history.filter(item => item.resolvedAt);
+  $('stopped-count').textContent = String(resolved.filter(item => item.status === 'BLOCKED_BY_CAREGIVER').length);
+  // A short confirmation after a decision; after two minutes it just lives in the history below.
+  const latest = [...resolved].sort((a, b) => new Date(b.resolvedAt) - new Date(a.resolvedAt))[0];
+  const recent = latest && Date.now() - new Date(latest.resolvedAt) < 120000;
+  $('just-resolved').hidden = !recent;
+  if (recent) $('just-resolved').textContent = latest.status === 'BLOCKED_BY_CAREGIVER'
+    ? `You stopped ${money(latest.amount)} to “${latest.recipient}”. Granddad’s screen shows it’s blocked.`
+    : `You approved ${money(latest.amount)} to “${latest.recipient}”. Granddad can finish the payment.`;
+  $('history-empty').hidden = history.length > 0;
+  $('history-list').replaceChildren(...history.map(item => {
+    const li = document.createElement('li');
+    const what = document.createElement('span'); what.className = 'what'; what.textContent = `${money(item.amount)} · ${item.recipient}`;
+    const vetoed = item.status === 'BLOCKED_BY_CAREGIVER', approved = item.status === 'CLEARED_BY_CAREGIVER';
+    const pill = document.createElement('span');
+    pill.className = `pill ${vetoed ? 'veto-pill' : 'approve-pill'}`; pill.textContent = vetoed ? 'Stopped' : approved ? 'Approved' : 'Not reviewed';
+    const meta = document.createElement('span'); meta.className = 'meta'; meta.textContent = `${kind(item)} · ${time(item.createdAt)}`;
+    li.append(what, pill, meta); return li;
+  }));
+}
+
+async function poll() {
+  clearTimeout(timer);
+  try {
+    const res = await fetch('/api/caregiver/active', { cache: 'no-store' });
+    if (!res.ok) throw new Error(res.status);
+    const { escalation, history = [] } = await res.json();
+    $('live').className = 'live'; $('live').lastChild.textContent = 'Live';
+    if (!busy) { renderAlert(escalation); renderCalm(history); }
+  } catch {
+    $('live').className = 'live off'; $('live').lastChild.textContent = 'Reconnecting';
+  }
+  // Polls only this demo server (no paid APIs), and pauses while the page is hidden.
+  if (!document.hidden) timer = setTimeout(poll, 2000);
+}
+
+async function decide(decision) {
+  if (!current || busy) return;
+  busy = true; $('veto').disabled = $('approve').disabled = true;
+  try {
+    await fetch('/api/caregiver/decision', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ authId: current.authId, decision }) });
+  } finally { busy = false; poll(); }
+}
+
+$('veto').addEventListener('click', () => decide('VETO'));
+// Approving releases money, so it takes a second, deliberate tap. Vetoing is always one tap.
+let approveArmed = null;
+function disarmApprove() { clearTimeout(approveArmed); approveArmed = null; $('approve').classList.remove('confirming'); $('approve').textContent = 'Approve payment'; }
+$('approve').addEventListener('click', () => {
+  if (!current || busy) return;
+  if (!approveArmed) {
+    $('approve').classList.add('confirming');
+    $('approve').textContent = `Tap again to approve ${money(current.amount)}`;
+    approveArmed = setTimeout(disarmApprove, 5000);
+    return;
+  }
+  disarmApprove(); decide('APPROVE');
+});
+$('call').addEventListener('click', () => { $('overlay').hidden = false; $('hangup').focus(); });
+$('hangup').addEventListener('click', () => { $('overlay').hidden = true; });
+document.addEventListener('visibilitychange', () => { if (!document.hidden) poll(); else clearTimeout(timer); });
+poll();
+</script>
+</body>
+</html>

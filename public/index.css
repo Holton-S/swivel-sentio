@@ -244,3 +244,56 @@ body:has(#intervention[hidden]) #review-card .badge { color: var(--mint); backgr
 @keyframes organic-success { from { box-shadow: 0 0 0 0 color-mix(in srgb, var(--green) 18%, transparent); } to { box-shadow: 0 0 0 6px color-mix(in srgb, var(--green) 0%, transparent); } }
 @media (prefers-reduced-motion: no-preference) { .settings-status, body:has(#intervention[hidden]) #review-card .badge { animation: organic-success .7s ease-out; } }
 @media (prefers-reduced-motion: reduce) { .settings-status, body:has(#intervention[hidden]) #review-card .badge { animation: none !important; } }
+
+/* Living shield: rings breathe, a ripple drifts outward, and the status dot pulses like a heartbeat. */
+.orbit-inner { position: relative; }
+.orbit-inner::after { content: ''; position: absolute; inset: -1px; border: 1px solid color-mix(in srgb, var(--mint) 45%, transparent); border-radius: inherit; opacity: 0; pointer-events: none; }
+@keyframes shield-breathe { 0%,100% { transform: rotate(-4deg) scale(1); opacity: .55; } 50% { transform: rotate(5deg) scale(1.07); opacity: 1; } }
+@keyframes shield-ripple { 0% { transform: scale(1); opacity: .7; } 100% { transform: scale(1.75); opacity: 0; } }
+@keyframes dot-ping { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--mint) 55%, transparent); } 70%,100% { box-shadow: 0 0 0 14px color-mix(in srgb, var(--mint) 0%, transparent); } }
+@keyframes dot-glow { 0%,100% { opacity: .45; } 50% { opacity: 1; } }
+@media (prefers-reduced-motion: no-preference) {
+  .orbit::before { animation: shield-breathe 6s ease-in-out infinite; }
+  .orbit::after { animation: shield-breathe 9s ease-in-out infinite reverse; }
+  .orbit-inner::after { animation: shield-ripple 4s ease-out infinite; }
+  .orbit i { animation: dot-ping 2s ease-out infinite; }
+}
+/* Reduced motion: no movement, just a soft fade so the shield still reads as "on". */
+@media (prefers-reduced-motion: reduce) {
+  .orbit i { animation: dot-glow 3s ease-in-out infinite !important; }
+}
+
+/* Live expression indicator: one color language across the pill, the camera meter, and the family metric. */
+#mood-pill.mood-pill, .family-mood, #mood-meter-fill { --mood: var(--green); }
+#mood-pill.mood-pill[data-level="uneasy"], .family-mood[data-level="uneasy"], #mood-meter-fill[data-level="uneasy"] { --mood: color-mix(in srgb, var(--green) 45%, var(--amber)); }
+#mood-pill.mood-pill[data-level="worried"], .family-mood[data-level="worried"], #mood-meter-fill[data-level="worried"] { --mood: var(--amber); }
+#mood-pill.mood-pill[data-level="scared"], .family-mood[data-level="scared"], #mood-meter-fill[data-level="scared"] { --mood: var(--rose); }
+#mood-pill.mood-pill { border-color: color-mix(in srgb, var(--mood) 55%, var(--bg)); background: color-mix(in srgb, var(--mood) 14%, transparent); transition: border-color .6s ease, background-color .6s ease; }
+#mood-pill.mood-pill svg { color: var(--mood); transition: color .6s ease; }
+#mood-pill.mood-pill strong { color: color-mix(in srgb, var(--mood) 35%, var(--text)); }
+#guardian-mood-source { font-size: .85em; color: var(--muted); }
+.family-mood { color: color-mix(in srgb, var(--mood) 40%, var(--text)); transition: color .6s ease; }
+.mood-meter-wrap { margin-top: 16px; }
+.mood-meter-labels { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; font-size: 13px; color: var(--muted); }
+.mood-meter-labels strong { font-size: 16px; font-weight: 500; color: var(--text); }
+.mood-meter { height: 10px; margin-top: 8px; border-radius: 10px; overflow: hidden; background: color-mix(in srgb, var(--text) 10%, var(--bg)); }
+#mood-meter-fill { display: block; height: 100%; width: 4%; border-radius: inherit; background: var(--mood); transition: width .35s ease-out, background-color .5s ease; }
+@media (prefers-reduced-motion: no-preference) {
+  #mood-pill.mood-pill[data-level="worried"] svg, #mood-pill.mood-pill[data-level="scared"] svg { animation: mood-nudge 1.6s ease-in-out infinite; }
+}
+@keyframes mood-nudge { 0%,100% { transform: scale(1); } 50% { transform: scale(1.15); } }
+
+/* Phone call / text message switch for the demo lab. */
+.channel-switch { display: inline-flex; gap: 4px; padding: 4px; margin: 4px 0 14px; border-radius: 12px; border: 1px solid var(--line); background: color-mix(in srgb, var(--text) 4%, var(--bg)); }
+.channel-switch button { background: none; border-radius: 9px; padding: 8px 14px; font-size: 13px; color: var(--muted); min-height: 40px; }
+.channel-switch button[aria-checked="true"] { background: color-mix(in srgb, var(--green) 26%, var(--bg)); color: var(--text); }
+.channel-switch button:hover { color: var(--text); }
+.text-presets { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 14px; font-size: 13px; color: var(--muted); }
+.chip { background: color-mix(in srgb, var(--rose) 14%, var(--bg)); border: 1px solid color-mix(in srgb, var(--rose) 45%, var(--bg)); color: var(--text); border-radius: 20px; padding: 7px 13px; font-size: 13px; min-height: 36px; }
+.chip.safe { background: color-mix(in srgb, var(--green) 14%, var(--bg)); border-color: color-mix(in srgb, var(--green) 45%, var(--bg)); }
+.chip:hover { filter: brightness(1.2); }
+
+/* Approve is deliberate: quieter styling, and a second tap to confirm. */
+.phone-approve { min-height: 44px; background: none; border: 1px solid color-mix(in srgb, var(--bg) 25%, var(--text)); color: color-mix(in srgb, var(--bg) 70%, var(--text)); border-radius: 8px; font-size: 13px; }
+.phone-approve:disabled { opacity: .5; }
+button.confirming { background: color-mix(in srgb, var(--amber) 30%, var(--bg)) !important; border-color: var(--amber) !important; color: var(--text) !important; }

@@ -5,8 +5,8 @@
 
 import { analyzeTranscript } from "../lib/detector.js";
 import { biometricEngine } from "../lib/biometrics.js";
-import { tigerData, TIGER_DATA_SCHEMA_DDL } from "../lib/tigerdata.js";
-import { generateInterventionScript } from "../lib/voice.js";
+import { TigerDataStore, TIGER_DATA_SCHEMA_DDL } from "../lib/tigerdata.js";
+import { generateInterventionScript, ALARMING_WORDS } from "../lib/voice.js";
 import { caregiverNetwork } from "../lib/caregiver.js";
 
 const TEST_CASES = [
@@ -121,12 +121,14 @@ export function runAllTests() {
   console.log("\n[QA SUITE 3] Tiger Data Postgres Relational & Timeseries Layer");
   results.total++;
   const schemaValid = TIGER_DATA_SCHEMA_DDL.includes("create_hypertable") && TIGER_DATA_SCHEMA_DDL.includes("continuous");
+  // A throwaway in-memory store: the system check must never write test rows into the real database.
+  const tigerData = new TigerDataStore();
   const testSample = biometricEngine.generateSample();
   const rec = tigerData.insertTelemetry(testSample);
   const inc = tigerData.recordIncident({ score: 95, riskTier: "CRITICAL", amount: 2500 });
   const rollup = tigerData.getTelemetryRollup();
 
-  if (schemaValid && rec.heart_rate && inc.incident_id && rollup.length > 0) {
+  if (schemaValid && Number.isFinite(rec.stress_index) && inc.incident_id && rollup.length > 0) {
     results.passed++;
     console.log(`  [PASS] TIGER-01: Schema DDL verified, Hypertable inserted, Rollup size: ${rollup.length}`);
   } else {
@@ -142,7 +144,8 @@ export function runAllTests() {
     score: 90
   };
   const voiceScript = generateInterventionScript(mockAnalysis);
-  const voicePassed = voiceScript.text.includes("IRS") && voiceScript.speakerName.includes("Caregiver");
+  // Right scenario chosen, and the spoken text calms rather than repeating the threat back.
+  const voicePassed = voiceScript.title.includes("Government") && !ALARMING_WORDS.test(voiceScript.text) && voiceScript.speakerName.includes("Caregiver");
   if (voicePassed) {
     results.passed++;
     console.log(`  [PASS] VOICE-01: Intervention script generated -> Voice: ${voiceScript.speakerName}`);
