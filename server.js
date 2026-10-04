@@ -21,7 +21,8 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 // Larger limit so a few seconds of microphone audio fit in one JSON request.
 app.use(express.json({ limit: "4mb" }));
-app.use(express.static(path.join(__dirname, "public")));
+// no-cache: browsers always re-check, so a demo never runs yesterday's code after an update.
+app.use(express.static(path.join(__dirname, "public"), { setHeaders: res => res.set("Cache-Control", "no-cache") }));
 // Face-expression model is served locally so the demo works offline and video never leaves the device.
 app.use("/vendor/face-api", express.static(path.join(__dirname, "node_modules/@vladmandic/face-api/dist")));
 app.use("/vendor/face-models", express.static(path.join(__dirname, "node_modules/@vladmandic/face-api/model")));
