@@ -58,6 +58,7 @@ app.post("/api/detect", async (req, res) => {
   const t0 = performance.now();
   const analysis = analyzeTranscript(transcript, bioSample, aiResult);
   analysis.channel = channel === "text" ? "text" : "call";
+  tigerData.recordCheck({ channel: analysis.channel, amount: transaction?.amount, recipient: transaction?.recipient, analysis, biometrics: bioSample });
   const latencyMs = +(performance.now() - t0).toFixed(3);
 
   // If high or critical risk, record incident in Tiger Data audit log

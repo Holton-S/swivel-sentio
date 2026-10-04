@@ -217,11 +217,17 @@ async function checkTranscript(scenario, fromMic = false) {
     $('analysis-result').textContent = state.locked ? `${analysis.riskTier !== 'LOW' ? 'Pressure signals detected' : familyCheck ? 'Family check is on: every money request waits for Emily' : 'Protection rule matched'}. Payment paused for family review.` : 'No coercion signals detected in this sample. Demo payment is ready.';
     if (analysis.reason) $('analysis-result').textContent += ` Gemini: ${analysis.scamType && analysis.scamType !== 'None' ? `${analysis.scamType}. ` : ''}${analysis.reason}`;
     $('analysis-result').textContent += ` Expression ${state.incidentBio.expression || 'unknown'} · stress ${state.incidentBio.stressIndex}/100 (${state.incidentBio.expressionSource === 'camera' ? 'live camera' : 'simulated'}).`;
+    // Every checked payment is logged, including safe ones that went through. (Live mic checks
+    // run on each spoken phrase, so only a paused one is logged to keep the history readable.)
+    if (state.locked || !fromMic) {
+      state.incidentId = incident?.incident_id || `local-${Date.now()}`;
+      state.entries.unshift({ incident_id: state.incidentId, detected_at: new Date().toISOString(), recipient_alias: state.transaction.recipient, amount: state.transaction.amount, flags: Object.values(analysis.flags || {}).flat(), expression: state.incidentBio.expression, stress: state.incidentBio.stressIndex, expressionSource: state.incidentBio.expressionSource === 'camera' ? 'live camera' : 'simulated', payment_rail: incident?.payment_rail || state.transaction.rail.toUpperCase(), risk_score: analysis.score, channel: state.channel || 'call', allowed: !state.locked, receipt: null });
+      state.entries = state.entries.slice(0, 50);
+      saveSession(); renderAudit();
+    }
     if (state.locked) {
       stopMic();
-      state.incidentId = incident?.incident_id || `local-${Date.now()}`;
-      state.entries.unshift({ incident_id: state.incidentId, detected_at: new Date().toISOString(), recipient_alias: state.transaction.recipient, amount: state.transaction.amount, flags: Object.values(analysis.flags || {}).flat(), expression: state.incidentBio.expression, stress: state.incidentBio.stressIndex, expressionSource: state.incidentBio.expressionSource === 'camera' ? 'live camera' : 'simulated', payment_rail: incident?.payment_rail || state.transaction.rail.toUpperCase(), risk_score: analysis.score, receipt: null });
-      saveSession(); renderIntervention(); renderAudit(); view('guardian', true);
+      renderIntervention(); view('guardian', true);
       await escalate();
     }
     if (!state.locked && $('transcript').value.trim() !== checkedTranscript) {
@@ -320,7 +326,7 @@ function renderAudit() {
     const flags = entry.flags || Object.values(entry.coercion_flags || {}).flat();
     const signals = cell(flags.length ? flags.join(' · ') : 'Protection rule / server incident');
     detail(signals, Number.isFinite(entry.stress) ? `${entry.expression ? `Looked ${entry.expression.toLowerCase()} · ` : ''}Stress ${entry.stress}/100 (${entry.expressionSource || 'simulated'})` : 'Stress snapshot not supplied by server');
-    const receipt = cell(entry.receipt ? `${entry.receipt.decision === 'VETO' ? 'Veto' : 'Approval'} confirmed` : 'No confirmed family receipt');
+    const receipt = cell(entry.receipt ? `${entry.receipt.decision === 'VETO' ? 'Veto' : 'Approval'} confirmed` : entry.allowed ? 'Allowed · no review needed' : 'No confirmed family receipt');
     if (entry.receipt) detail(receipt, `${entry.receipt.authId} · ${new Date(entry.receipt.time).toLocaleTimeString()}`);
   }
 }
