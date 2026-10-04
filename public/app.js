@@ -7,20 +7,20 @@ const money = value => new Intl.NumberFormat('en-US', { style: 'currency', curre
 const state = { bio: null, connected: false, busy: false, listening: false, recognition: null, transaction: null, analysis: null, locked: false, completed: false, authId: null, receipt: null, incidentId: null, script: '', entries: [], serverEntries: [], timer: null, speech: null };
 const presets = {
   irs: { amount: 2400, recipient: 'Federal Tax Processing', rail: 'wire', mode: 'panic', transcript: 'This is the IRS. You must wire transfer the penalty immediately or police will arrest you. Do not hang up. Keep this confidential.' },
-  grandchild: { amount: 3000, recipient: 'Emergency Hospital Transfer', rail: 'wire', mode: 'panic', transcript: "Granddad, your grandson is in the hospital after an accident. Please wire money right now for emergency surgery. Do not tell your family. Hurry before it is too late." },
+  grandchild: { amount: 3000, recipient: 'Emergency Hospital Transfer', rail: 'wire', mode: 'panic', transcript: "Hi, it's me, your grandson. I'm in the hospital after an accident. Please wire money right now for emergency surgery. Do not tell your family. Hurry before it is too late." },
   geek: { amount: 1200, recipient: 'Geek Squad Support', rail: 'gift', mode: 'elevated', transcript: 'This is Geek Squad tech support. Buy Apple gift cards immediately to fix your frozen account. Read the numbers to me and keep this confidential. Do not hang up.' },
   utility: { amount: 85, recipient: 'City Electric', rail: 'bill', mode: 'calm', transcript: 'Your monthly electric bill is 85 dollars. Review your statement and pay through your usual online account by the end of the month. Thank you.' },
   // Text-message scams: Gemini reads these as texts, and the payment is whatever the link asks for.
   usps: { channel: 'text', amount: 2, recipient: 'usps-redelivery-care.com', rail: 'card', mode: 'elevated', transcript: 'USPS: Your package is on hold due to an unpaid $1.99 redelivery fee. Pay within 12 hours at usps-redelivery-care.com or it will be returned to sender.' },
   toll: { channel: 'text', amount: 7, recipient: 'txtag-tollpay.info', rail: 'card', mode: 'elevated', transcript: 'TxTag Toll Services: You have an unpaid toll balance of $6.99. To avoid a $50 late fee and suspension of your license, pay today at txtag-tollpay.info' },
-  newnumber: { channel: 'text', amount: 800, recipient: 'New number via Zelle', rail: 'p2p', mode: 'elevated', transcript: "Hi Grandpa it's me, I dropped my phone in the pool so this is my new number. I'm in a bit of trouble, can you send $800 with Zelle? Please don't tell mom, I'll explain later." },
+  newnumber: { channel: 'text', amount: 800, recipient: 'New number via Zelle', rail: 'p2p', mode: 'elevated', transcript: "Hi it's me, your grandson, I dropped my phone in the pool so this is my new number. I'm in a bit of trouble, can you send $800 with Zelle? Please don't tell mom, I'll explain later." },
   // Sounds normal, so it passes, unless "Family check on every money request" is on (numbers can be spoofed).
-  familymoney: { channel: 'text', amount: 150, recipient: 'Emily (text request)', rail: 'p2p', mode: 'calm', transcript: "Dad, the plumber is coming Tuesday. Can you send me the $150 for your half of the repair when you get a chance?" },
-  family: { channel: 'text', amount: 0, recipient: 'No payment requested', rail: 'none', mode: 'calm', transcript: "Hi Dad, it's Emily. Your pharmacy order is ready for pickup at CVS after 3pm. Want me to drive you tomorrow?" }
+  familymoney: { channel: 'text', amount: 150, recipient: 'Emily (text request)', rail: 'p2p', mode: 'calm', transcript: "Hey, it's Emily. The plumber is coming Tuesday. Can you send me the $150 for your half of the repair when you get a chance?" },
+  family: { channel: 'text', amount: 0, recipient: 'No payment requested', rail: 'none', mode: 'calm', transcript: "Hi, it's Emily. Your pharmacy order is ready for pickup at CVS after 3pm. Want me to drive you tomorrow?" }
 };
 const CHANNEL_COPY = {
   call: { label: 'Live audio lab', placeholder: 'Choose a scenario, type a call transcript, or try your microphone…', check: 'Check transcript →' },
-  text: { label: 'Text message lab', placeholder: 'Pick a text above, or paste any text message Granddad received…', check: 'Check message →' }
+  text: { label: 'Text message lab', placeholder: 'Pick a text above, or paste any text message your grandparent received…', check: 'Check message →' }
 };
 function setChannel(channel) {
   state.channel = channel === 'text' ? 'text' : 'call';
@@ -636,7 +636,7 @@ $('demo-mode').addEventListener('change', async () => {
 function renderDispatch() {
   const hasPayment = !!state.transaction && !!state.analysis && (state.locked || !!state.receipt);
   const expression = state.dispatch?.expression ?? state.incidentBio?.expression;
-  $('dispatch-message').textContent = hasPayment ? `URGENT: ${money(state.transaction.amount)} payment to “${state.transaction.recipient}” needs your review. ${state.analysis.coercionDetected ? 'Coercion signals detected. ' : 'A protection rule was triggered. '}${expression && expression !== 'Calm' ? `Granddad looks ${expression.toLowerCase()}. ` : ''}The demo payment is paused until you decide.` : 'When a payment needs a second look, your family alert will appear here.';
+  $('dispatch-message').textContent = hasPayment ? `URGENT: ${money(state.transaction.amount)} payment to “${state.transaction.recipient}” needs your review. ${state.analysis.coercionDetected ? 'Coercion signals detected. ' : 'A protection rule was triggered. '}${expression && expression !== 'Calm' ? `Grandparent looks ${expression.toLowerCase()}. ` : ''}The demo payment is paused until you decide.` : 'When a payment needs a second look, your family alert will appear here.';
   if (state.receipt) $('dispatch-message').textContent = state.receipt.decision === 'VETO' ? `${money(state.transaction.amount)} to “${state.transaction.recipient}”: permanently blocked in this demo. Your veto is confirmed.` : `${money(state.transaction.amount)} to “${state.transaction.recipient}”: approved by you. The demo hold is cleared.`;
   const date = new Date(state.dispatch?.time || state.receipt?.time || Date.now());
   $('dispatch-time').textContent = hasPayment ? `Today ${date.toLocaleTimeString([], {hour:'numeric',minute:'2-digit'})}` : 'Your family’s safety line';

@@ -5,7 +5,7 @@
   calm state**.
 - Phone: ntfy app subscribed, and **Emily's page** open (`/emily.html` on the public link). Check
   the green **Live** dot.
-- Optional: **Enable camera** and **Use demo monitor** on Granddad's screen. Have one real scam
+- Optional: **Enable camera** and **Use demo monitor** on Grandparent's screen. Have one real scam
   text copied, in case a judge asks.
 
 ---
@@ -16,25 +16,25 @@
 > **before**, at the moment of pressure. Our domain is the one question every victim should ask:
 > **is this really you?**"
 
-*Show Granddad's screen: the calm shield and "Feeling: Calm."*
+*Show Grandparent's screen: the calm shield and "Feeling: Calm."*
 
 ### 0:15 – The scam call (30 sec)
 *Family Portal → **IRS arrest call**.*
-> "A fake IRS agent is threatening arrest unless Granddad wires $2,400. **Gemini** reads the call,
-> scores it, and explains in plain English why it's a scam. If his face looks scared, or his heart
+> "A fake IRS agent is threatening arrest unless the grandparent wires $2,400. **Gemini** reads the call,
+> scores it, and explains in plain English why it's a scam. If their face looks scared, or their heart
 > races, the risk goes up even more."
 
-*Granddad's screen takes over. Click **Listen to calming audio guide**.*
-> "Instead of a scary alarm, an **ElevenLabs** voice calms him down. Notice it never repeats the
-> scammer's threats back to him."
+*Grandparent's screen takes over. Click **Listen to calming audio guide**.*
+> "Instead of a scary alarm, an **ElevenLabs** voice calms them down. Notice it never repeats the
+> scammer's threats back to them."
 
 ### 0:45 – Emily's phone (30 sec) ← the big moment
 *The phone buzzes. Hold it up.*
-> "His daughter Emily gets this on her real phone: the amount, the scam type, Gemini's reason,
-> and that Granddad looks scared. Stopping money is **one tap**…"
+> "Their daughter Emily gets this on her real phone: the amount, the scam type, Gemini's reason,
+> and that the grandparent looks scared. Stopping money is **one tap**…"
 
 *Tap **Veto** on the phone. Point at the laptop: it updates by itself to "payment stopped".*
-> "…and Granddad's screen updates instantly. Approving takes **two deliberate taps** and never
+> "…and the grandparent's screen updates instantly. Approving takes **two deliberate taps** and never
 > works from a lock screen, because releasing money should never be an accident."
 
 ### 1:15 – Texts and spoofing (25 sec)

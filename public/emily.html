@@ -81,7 +81,7 @@ button:focus-visible { outline: 3px solid var(--mint); outline-offset: 3px; }
 
   <section id="quiet" class="card quiet" aria-live="polite">
     <span class="badge-shield"><svg><use href="#shield"/></svg></span>
-    <p class="big">Granddad is protected</p>
+    <p class="big">Your grandparent is protected</p>
     <p>No payments are waiting for you.</p>
     <p id="just-resolved" class="just" hidden></p>
     <div class="status-rows">
@@ -98,7 +98,7 @@ button:focus-visible { outline: 3px solid var(--mint); outline-offset: 3px; }
     <div class="facts">
       <div class="fact"><span>What it looks like</span><span id="scam-type"></span></div>
       <div class="fact"><span>Risk</span><span id="risk"></span></div>
-      <div class="fact" id="mood-row"><span>Granddad</span><span id="mood"></span></div>
+      <div class="fact" id="mood-row"><span>Grandparent</span><span id="mood"></span></div>
       <div class="fact" id="hr-row"><span>Heart rate</span><span id="hr"></span></div>
       <div class="fact"><span>Received</span><span id="time"></span></div>
     </div>
@@ -106,9 +106,9 @@ button:focus-visible { outline: 3px solid var(--mint); outline-offset: 3px; }
     <p id="result" class="result" hidden></p>
     <div id="actions" class="actions">
       <button id="veto" class="veto">🚫 Veto &amp; block funds</button>
-      <button id="call" class="call">📞 Call Granddad</button>
+      <button id="call" class="call">📞 Call Grandparent</button>
       <button id="approve" class="approve">Approve payment</button>
-      <p class="approve-note">Only approve after you’ve talked with Granddad.</p>
+      <p class="approve-note">Only approve after you’ve talked with them.</p>
     </div>
   </section>
 
@@ -122,7 +122,7 @@ button:focus-visible { outline: 3px solid var(--mint); outline-offset: 3px; }
 </div>
 
 <div id="overlay" class="overlay" hidden>
-  <div class="card"><div class="avatar">G</div><strong>Calling Granddad…</strong><p class="foot" style="margin:8px 0 18px">Demo call · No real call is placed</p><button id="hangup" class="veto" style="width:100%">End call</button></div>
+  <div class="card"><div class="avatar">G</div><strong>Calling your grandparent…</strong><p class="foot" style="margin:8px 0 18px">Demo call · No real call is placed</p><button id="hangup" class="veto" style="width:100%">End call</button></div>
 </div>
 
 <script>
@@ -170,8 +170,8 @@ function renderCalm(history) {
   const recent = latest && Date.now() - new Date(latest.resolvedAt) < 120000;
   $('just-resolved').hidden = !recent;
   if (recent) $('just-resolved').textContent = latest.status === 'BLOCKED_BY_CAREGIVER'
-    ? `You stopped ${money(latest.amount)} to “${latest.recipient}”. Granddad’s screen shows it’s blocked.`
-    : `You approved ${money(latest.amount)} to “${latest.recipient}”. Granddad can finish the payment.`;
+    ? `You stopped ${money(latest.amount)} to “${latest.recipient}”. Their screen shows it’s blocked.`
+    : `You approved ${money(latest.amount)} to “${latest.recipient}”. They can finish the payment.`;
   $('history-empty').hidden = history.length > 0;
   $('history-list').replaceChildren(...history.map(item => {
     const li = document.createElement('li');

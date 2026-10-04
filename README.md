@@ -2,9 +2,9 @@
 
 **A quiet shield against phone and text scams that target older adults.**
 
-When a scammer pressures Granddad to pay, Swivel Sentio **pauses the payment**, **calms him with a
-gentle AI voice**, and **buzzes his daughter's real phone** so she can veto it with one tap.
-Granddad's screen updates the moment she decides.
+When a scammer pressures a grandparent to pay, Swivel Sentio **pauses the payment**, **calms them with a
+gentle AI voice**, and **buzzes their daughter's real phone** so she can veto it with one tap.
+Grandparent's screen updates the moment she decides.
 
 > **Ask one question before money moves: _is this really you?_** · Demo domain: `isthisreallyyou.biz`
 >
@@ -25,14 +25,14 @@ moves. Swivel Sentio adds friction *before* it moves, at the moment of pressure.
 
 1. **Listens to the call or reads the text.** Google Gemini judges how likely it is to be a scam
    and explains why in plain words. Offline keyword rules back it up if the network is down.
-2. **Notices how Granddad is reacting.** An optional on-device camera check-in reads his
-   expression (Calm, Uneasy, Worried, Scared). An optional heart monitor reads his pulse. A scared
+2. **Notices how the grandparent is reacting.** An optional on-device camera check-in reads their
+   expression (Calm, Uneasy, Worried, Scared). An optional heart monitor reads their pulse. A scared
    face or a racing heart raises the risk.
-3. **Pauses the payment.** Granddad's screen gently takes over: *"Take a deep breath. We've
-   paused this payment."* An ElevenLabs voice talks him down without repeating the scammer's
+3. **Pauses the payment.** Grandparent's screen gently takes over: *"Take a deep breath. We've
+   paused this payment."* An ElevenLabs voice talks them down without repeating the scammer's
    threats.
 4. **Asks family.** Emily's real phone gets a push notification and a live page showing the
-   amount, the scam type, Gemini's explanation, and how Granddad looks. **Veto** is one tap.
+   amount, the scam type, Gemini's explanation, and how the grandparent looks. **Veto** is one tap.
    **Approve** takes two deliberate taps and never works from the lock screen.
 5. **Remembers everything.** Every checked payment (safe or not), every stress reading and every
    family decision goes into Tiger Data, so the history survives restarts.
@@ -80,7 +80,7 @@ Everything in the brief: AI that **flags suspicious payment requests** (calls *a
   on the database, and it falls back to memory if the database is unreachable.
 
 ### Best Design
-Two experiences for two people: large, calm type and slow organic motion for Granddad; a
+Two experiences for two people: large, calm type and slow organic motion for the grandparent; a
 dashboard and a real phone page for Emily. Mood is shown with words and color together, motion
 respects the reduced-motion setting, and Emily's page is built for a phone screen first.
 
@@ -134,7 +134,7 @@ and open `<that URL>/emily.html` on the phone.
 | POST | `/api/caregiver/escalate` | Pause and alert family (fires the phone push) |
 | POST | `/api/caregiver/decision` | `{ authId, decision: "APPROVE"\|"VETO" }` |
 | GET | `/api/caregiver/active` | Pending alert plus history (Emily's phone polls this) |
-| GET | `/api/caregiver/status/:id` | One review's status (Granddad's screen polls this) |
+| GET | `/api/caregiver/status/:id` | One review's status (Grandparent's screen polls this) |
 | GET | `/api/biometrics` | Stress sample; also records the live camera reading |
 | GET | `/api/tigerdata/rollup` | Per-minute stress (continuous aggregate) plus the incident ledger |
 | GET | `/api/qa/run` | Runs the unit suite against a throwaway store |
@@ -143,7 +143,7 @@ and open `<that URL>/emily.html` on the phone.
 
 ```mermaid
 flowchart LR
-  G["Granddad's screen<br/>call or text · camera · heart monitor"] -->|/api/detect| S[Node + Express]
+  G["Grandparent's screen<br/>call or text · camera · heart monitor"] -->|/api/detect| S[Node + Express]
   S --> GM[Gemini 2.5 Flash]
   S --> KW[Offline keyword rules]
   S --> TD[(Tiger Cloud<br/>hypertables + continuous aggregate)]
