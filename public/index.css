@@ -297,3 +297,14 @@ body:has(#intervention[hidden]) #review-card .badge { color: var(--mint); backgr
 .phone-approve { min-height: 44px; background: none; border: 1px solid color-mix(in srgb, var(--bg) 25%, var(--text)); color: color-mix(in srgb, var(--bg) 70%, var(--text)); border-radius: 8px; font-size: 13px; }
 .phone-approve:disabled { opacity: .5; }
 button.confirming { background: color-mix(in srgb, var(--amber) 30%, var(--bg)) !important; border-color: var(--amber) !important; color: var(--text) !important; }
+
+/* Heart monitor proof of concept. */
+.heart-buttons { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+.hr-readout { display: flex; align-items: baseline; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+.hr-heart { display: inline-block; font-size: 30px; color: var(--rose); transform-origin: center; }
+.hr-readout strong { font: 500 48px/1 'Outfit', sans-serif; letter-spacing: -1px; }
+.hr-unit { color: var(--muted); font-size: 18px; }
+.hr-readout small { flex-basis: 100%; color: var(--muted); font-size: 14px; }
+.hr-readout.racing strong, .family-hr.racing { color: color-mix(in srgb, var(--rose) 45%, var(--text)); }
+@media (prefers-reduced-motion: no-preference) { .hr-heart { animation: heart-beat 1s ease-out infinite; } }
+@keyframes heart-beat { 0%, 100% { transform: scale(1); } 15% { transform: scale(1.25); } 30% { transform: scale(1); } 45% { transform: scale(1.12); } }

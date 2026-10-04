@@ -99,6 +99,7 @@ button:focus-visible { outline: 3px solid var(--mint); outline-offset: 3px; }
       <div class="fact"><span>What it looks like</span><span id="scam-type"></span></div>
       <div class="fact"><span>Risk</span><span id="risk"></span></div>
       <div class="fact" id="mood-row"><span>Granddad</span><span id="mood"></span></div>
+      <div class="fact" id="hr-row"><span>Heart rate</span><span id="hr"></span></div>
       <div class="fact"><span>Received</span><span id="time"></span></div>
     </div>
     <p id="reason" class="reason"></p>
@@ -146,6 +147,9 @@ function renderAlert(esc) {
   const mood = esc.vitalSigns?.expression;
   $('mood-row').hidden = !mood;
   $('mood').textContent = mood ? `Looks ${mood.toLowerCase()}` : '';
+  const hrSource = esc.vitalSigns?.heartSource;
+  $('hr-row').hidden = !hrSource;
+  $('hr').textContent = hrSource ? `${esc.vitalSigns.heartRate} bpm · ${hrSource}` : '';
   $('time').textContent = time(esc.createdAt);
   const reason = esc.reason || (esc.coercionTriggers?.length ? `Signals heard: ${esc.coercionTriggers.slice(0, 4).join(' · ')}` : 'A protection rule paused this payment.');
   $('reason').replaceChildren(document.createTextNode(reason));

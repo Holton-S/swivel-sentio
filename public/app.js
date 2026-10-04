@@ -90,6 +90,7 @@ function renderVitals() {
   $('vitals-source').textContent = opticalAvailable() ? (state.demoScenario ? 'Live expression from camera · Scenario stress simulated' : 'Live expression from camera · Feeds the risk score') : state.demoScenario ? 'Scenario stress simulated · Camera off' : 'Simulated stress · Camera off';
   $('family-mood').textContent = $('guardian-mood').textContent = !state.connected ? 'Offline' : mood ? mood.label : '—';
   $('family-mood').dataset.level = $('mood-pill').dataset.level = mood?.level || 'calm';
+  if (typeof renderHeart === 'function') renderHeart();
   $('guardian-mood-source').textContent = !state.connected ? 'Offline' : mood?.source === 'live' ? 'Live from camera' : 'Camera off';
   $('stress').textContent = !state.connected ? 'Unavailable' : calm ? 'Relaxed' : 'Elevated';
   $('last-seen').textContent = state.connected ? 'Updated just now' : 'Unable to refresh vitals';
@@ -216,6 +217,7 @@ async function checkTranscript(scenario, fromMic = false) {
     state.locked = ['HIGH', 'CRITICAL', 'MEDIUM'].includes(analysis.riskTier) || rulePause;
     $('analysis-result').textContent = state.locked ? `${analysis.riskTier !== 'LOW' ? 'Pressure signals detected' : familyCheck ? 'Family check is on: every money request waits for Emily' : 'Protection rule matched'}. Payment paused for family review.` : 'No coercion signals detected in this sample. Demo payment is ready.';
     if (analysis.reason) $('analysis-result').textContent += ` Gemini: ${analysis.scamType && analysis.scamType !== 'None' ? `${analysis.scamType}. ` : ''}${analysis.reason}`;
+    if (state.incidentBio.heartSource) $('analysis-result').textContent += ` Heart ${state.incidentBio.heartRate} bpm (${state.incidentBio.heartSource}).`;
     $('analysis-result').textContent += ` Expression ${state.incidentBio.expression || 'unknown'} · stress ${state.incidentBio.stressIndex}/100 (${state.incidentBio.expressionSource === 'camera' ? 'live camera' : 'simulated'}).`;
     // Every checked payment is logged, including safe ones that went through. (Live mic checks
     // run on each spoken phrase, so only a paused one is logged to keep the history readable.)
@@ -464,8 +466,68 @@ function currentBiometrics() {
     bio.stressIndex = state.demoScenario ? Math.max(state.bio.stressIndex, faceStress()) : faceStress();
     bio.expressionSource = 'camera';
   } else bio.expressionSource = 'simulated';
+  // A connected heart monitor (real Bluetooth device or the labeled demo monitor) supplies the pulse.
+  if (heartLive()) { bio.heartRate = heartBpm(); bio.heartSource = heartSourceLabel(); }
   return bio;
 }
+
+// Heart monitor proof of concept: the standard Bluetooth Heart Rate service (0x180D), or a demo monitor.
+const heart = { device: null, bpm: null, at: 0, demo: false, name: '' };
+function heartLive() { return heart.demo ? !!state.bio : heart.bpm !== null && performance.now() - heart.at < 5000; }
+function heartBpm() { return heart.demo ? Math.round(state.bio.heartRate) : heart.bpm; }
+function heartSourceLabel() { return heart.demo ? 'demo monitor' : heart.name || 'Bluetooth monitor'; }
+function renderHeart() {
+  const live = heartLive(), bpm = live ? heartBpm() : null;
+  $('hr-readout').hidden = !live;
+  $('hr-bpm').textContent = bpm ?? '—';
+  $('hr-source').textContent = live ? (heart.demo ? 'Demo monitor · simulated' : `${heart.name || 'Bluetooth monitor'} · live`) : '';
+  $('hr-heart').style.animationDuration = bpm ? `${(60 / bpm).toFixed(2)}s` : '';
+  $('hr-readout').classList.toggle('racing', !!bpm && bpm >= 95);
+  $('family-hr').textContent = live ? `${bpm} bpm` : heart.device ? 'Connecting…' : 'Not connected';
+  $('family-hr').classList.toggle('racing', !!bpm && bpm >= 95);
+  $('hr-demo').textContent = heart.demo ? 'Stop demo monitor' : 'Use demo monitor';
+  $('hr-demo').setAttribute('aria-pressed', String(heart.demo));
+  $('hr-connect').textContent = heart.device ? 'Disconnect' : 'Connect Bluetooth';
+  if (!heart.device && !heart.demo) $('hr-status').textContent = navigator.bluetooth ? 'Not connected' : 'Bluetooth is not available in this browser · Demo monitor still works';
+}
+function disconnectHeart(message = 'Monitor disconnected') {
+  const device = heart.device; heart.device = null; heart.bpm = null;
+  try { device?.gatt?.connected && device.gatt.disconnect(); } catch { /* already gone */ }
+  $('hr-status').textContent = message; renderVitals();
+}
+$('hr-connect').addEventListener('click', async () => {
+  if (heart.device) { disconnectHeart(); return; }
+  if (!navigator.bluetooth) { notice('Bluetooth needs Edge or Chrome on a computer with Bluetooth. Try the demo monitor.'); return; }
+  try {
+    $('hr-status').textContent = 'Choose your heart-rate monitor…';
+    const device = await navigator.bluetooth.requestDevice({ filters: [{ services: ['heart_rate'] }] });
+    heart.device = device; heart.name = device.name || 'Bluetooth monitor'; heart.demo = false;
+    device.addEventListener('gattserverdisconnected', () => disconnectHeart(`${heart.name} disconnected`));
+    $('hr-status').textContent = `Connecting to ${heart.name}…`; renderVitals();
+    const server = await device.gatt.connect();
+    const characteristic = await (await server.getPrimaryService('heart_rate')).getCharacteristic('heart_rate_measurement');
+    characteristic.addEventListener('characteristicvaluechanged', event => {
+      const value = event.target.value;
+      // Bit 0 of the flags byte: heart rate is 16-bit (1) or 8-bit (0).
+      heart.bpm = value.getUint8(0) & 1 ? value.getUint16(1, true) : value.getUint8(1);
+      heart.at = performance.now();
+      $('hr-status').textContent = `Connected to ${heart.name} · live heart rate`;
+      renderVitals();
+    });
+    await characteristic.startNotifications();
+    $('hr-status').textContent = `Connected to ${heart.name} · waiting for a reading`;
+  } catch (error) {
+    if (heart.device) disconnectHeart();
+    $('hr-status').textContent = error?.name === 'NotFoundError' ? 'No monitor chosen · Try the demo monitor' : 'Could not connect · Make sure the monitor is on and broadcasting';
+    renderVitals();
+  }
+});
+$('hr-demo').addEventListener('click', () => {
+  if (heart.device) disconnectHeart();
+  heart.demo = !heart.demo;
+  $('hr-status').textContent = heart.demo ? 'Demo monitor on · Simulated readings that follow the scenario' : 'Not connected';
+  renderVitals();
+});
 function loadFaceModels() {
   if (optical.modelsReady) return optical.modelsReady;
   optical.modelsReady = new Promise((resolve, reject) => {
