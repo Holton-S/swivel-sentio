@@ -27,7 +27,7 @@ function setChannel(channel) {
   const copy = CHANNEL_COPY[state.channel];
   document.querySelectorAll('[data-channel]').forEach(button => button.setAttribute('aria-checked', String(button.dataset.channel === state.channel)));
   $('text-presets').hidden = state.channel !== 'text';
-  $('mic-button').hidden = state.channel === 'text';
+  $('mic-button').hidden = $('scam-call-button').hidden = state.channel === 'text';
   if (state.channel === 'text' && state.listening) stopMic();
   $('lab-label').textContent = copy.label; $('transcript').placeholder = copy.placeholder; $('analyze-button').textContent = copy.check;
 }
@@ -177,7 +177,7 @@ async function escalate() {
   } catch (error) { $('review-status').textContent = `Family review unavailable: ${error.message}. Payment remains locked.`; }
   saveSession(); renderIntervention(); watchReview();
 }
-async function checkTranscript(scenario, fromMic = false) {
+async function checkTranscript(scenario, fromMic = false, callPayment = null) {
   if (state.busy) return;
   if (state.locked && !state.receipt) { notice('Review or veto the paused payment before starting another scenario.'); return; }
   if (!scenario && state.locked) { notice('Reset the demo before checking another payment.'); return; }
@@ -193,7 +193,7 @@ async function checkTranscript(scenario, fromMic = false) {
     state.transaction = { amount: preset.amount, recipient: preset.recipient, rail: preset.rail };
   } else {
     // Freeform audio uses a clearly labeled demo transaction, never a real checkout.
-    state.transaction = state.channel === 'text' ? { amount: 100, recipient: 'Link in a text message', rail: 'unknown' } : { amount: 100, recipient: 'Live audio demo payment', rail: 'unknown' };
+    state.transaction = callPayment ? { ...callPayment } : state.channel === 'text' ? { amount: 100, recipient: 'Link in a text message', rail: 'unknown' } : { amount: 100, recipient: 'Live audio demo payment', rail: 'unknown' };
   }
   state.demoScenario = !!scenario;
   state.dispatch = null; $('call-simulation').hidden = true;
@@ -435,6 +435,55 @@ $('mic-button').addEventListener('click', () => {
   if (navigator.mediaDevices?.getUserMedia && window.MediaRecorder) startServerListening(); else startBrowserRecognition();
 });
 document.addEventListener('visibilitychange', () => { if (document.hidden && state.listening) { stopMic(); $('mic-status').textContent = 'Microphone paused while you were away. Start again to listen.'; } });
+// Test scam call: an ElevenLabs "scammer" voice plays while its words appear one at a time, in sync,
+// using ElevenLabs' character timestamps. Gemini checks after every sentence, so the risk builds live
+// and the payment can pause mid-call. Clearly labeled as simulated; replays use the cached audio.
+const scamCall = { audio: null, frame: null, data: null, checked: 0 };
+function stopScamCall() {
+  cancelAnimationFrame(scamCall.frame); scamCall.frame = null;
+  if (scamCall.audio) { scamCall.audio.pause(); scamCall.audio = null; }
+  $('scam-call-button').textContent = '▶ Play test scam call';
+}
+$('scam-call-button').addEventListener('click', async () => {
+  if (scamCall.frame) { stopScamCall(); $('mic-status').textContent = 'Test call stopped.'; return; }
+  if (state.busy || state.locked) { notice('Reset the demo before playing the test call.'); return; }
+  stopMic(); stopVoice(); setChannel('call');
+  $('transcript').value = ''; state.analysis = null; updateCheckout();
+  $('scam-call-button').textContent = '■ Stop test call';
+  $('mic-status').textContent = 'Connecting the simulated call…';
+  try {
+    if (!scamCall.data) {
+      const response = await fetch('/api/demo/scam-call', { cache: 'no-store' });
+      scamCall.data = response.status === 200 ? await response.json() : { words: null };
+    }
+  } catch { scamCall.data = { words: null }; }
+  const payment = { amount: 2400, recipient: 'Federal Tax Processing', rail: 'wire' };
+  // Without ElevenLabs, captions still play at a steady speaking pace.
+  const text = 'Hello, this is Officer Daniels with the Internal Revenue Service. There is a warrant for your arrest for unpaid taxes. To stop it, you must wire two thousand four hundred dollars today. Do not hang up, and do not tell your family about this call.';
+  const words = scamCall.data.words || text.split(' ').map((word, i) => ({ word, start: i * 0.38 }));
+  let audio = null;
+  if (scamCall.data.audio_base64) { audio = new Audio(`data:audio/mpeg;base64,${scamCall.data.audio_base64}`); scamCall.audio = audio; }
+  const startedAt = performance.now(); let shown = 0; scamCall.checked = 0; scamCall.sentences = 0;
+  $('mic-status').textContent = audio ? 'Simulated scam call (ElevenLabs voice) · live captions · Gemini checks every sentence' : 'Simulated scam call · live captions · Gemini checks every sentence';
+  const tick = () => {
+    if (!scamCall.frame && shown) return;
+    const now = audio ? audio.currentTime : (performance.now() - startedAt) / 1000;
+    while (shown < words.length && words[shown].start <= now) {
+      shown++;
+      $('transcript').value = words.slice(0, shown).map(w => w.word).join(' ');
+      $('transcript').scrollTop = $('transcript').scrollHeight;
+      // End of a sentence: check what has been said so far.
+      // The first check waits for two sentences, so the caller is heard in context, like a real listener.
+      if (/[.!?]$/.test(words[shown - 1].word)) { scamCall.sentences = (scamCall.sentences || 0) + 1; if (scamCall.sentences >= 2 && shown > scamCall.checked && !state.busy && !state.locked) { scamCall.checked = shown; checkTranscript(undefined, true, payment); } }
+    }
+    if (state.locked) { stopScamCall(); $('mic-status').textContent = 'Call paused mid-sentence: the shield stepped in.'; return; }
+    const finished = shown >= words.length && (!audio || audio.ended || audio.paused);
+    if (finished) { stopScamCall(); if (!state.locked && !state.busy && scamCall.checked < words.length) checkTranscript(undefined, true, payment); return; }
+    scamCall.frame = requestAnimationFrame(tick);
+  };
+  scamCall.frame = requestAnimationFrame(tick);
+  if (audio) { try { await audio.play(); } catch { notice('Click once anywhere on the page, then try the test call again (audio needs a click first).'); stopScamCall(); } }
+});
 const VOICE_PACE = .88; // Speaking speed for the calming guide: 1 is normal, lower is slower.
 // Prefer neural voices (Edge "Natural", Chrome "Google") over the robotic Windows desktop voices.
 function bestVoice() {

@@ -6,7 +6,7 @@ import { fileURLToPath } from "url";
 import { analyzeTranscript } from "./lib/detector.js";
 import { biometricEngine } from "./lib/biometrics.js";
 import { tigerData, TIGER_DATA_SCHEMA_DDL } from "./lib/tigerdata.js";
-import { generateInterventionScript, synthesizeSpeech } from "./lib/voice.js";
+import { generateInterventionScript, synthesizeSpeech, synthesizeScamCall } from "./lib/voice.js";
 import { analyzeWithGemini, transcribeWithGemini } from "./lib/gemini.js";
 import { caregiverNetwork } from "./lib/caregiver.js";
 import { pushEscalation, pushConfigured } from "./lib/notify.js";
@@ -94,6 +94,14 @@ app.post("/api/detect", async (req, res) => {
     incident,
     latencyMs
   });
+});
+
+// Simulated scam call for demos: ElevenLabs audio plus word timings for live captions.
+// 204 means ElevenLabs isn't configured; the page then plays captions without audio.
+app.get("/api/demo/scam-call", async (req, res) => {
+  const call = await synthesizeScamCall();
+  if (!call) return res.status(204).end();
+  res.set("Cache-Control", "no-store").json({ success: true, ...call });
 });
 
 // Live microphone: Gemini transcribes a short audio chunk. 204 means "not configured", so the

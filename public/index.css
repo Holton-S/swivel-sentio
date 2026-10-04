@@ -308,3 +308,6 @@ button.confirming { background: color-mix(in srgb, var(--amber) 30%, var(--bg)) 
 .hr-readout.racing strong, .family-hr.racing { color: color-mix(in srgb, var(--rose) 45%, var(--text)); }
 @media (prefers-reduced-motion: no-preference) { .hr-heart { animation: heart-beat 1s ease-out infinite; } }
 @keyframes heart-beat { 0%, 100% { transform: scale(1); } 15% { transform: scale(1.25); } 30% { transform: scale(1); } 45% { transform: scale(1.12); } }
+
+/* Test scam call button sits beside the microphone. */
+.lab-buttons { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
