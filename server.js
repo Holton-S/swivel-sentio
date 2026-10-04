@@ -7,7 +7,7 @@ import { analyzeTranscript } from "./lib/detector.js";
 import { biometricEngine } from "./lib/biometrics.js";
 import { tigerData, TIGER_DATA_SCHEMA_DDL } from "./lib/tigerdata.js";
 import { generateInterventionScript, synthesizeSpeech } from "./lib/voice.js";
-import { analyzeWithGemini } from "./lib/gemini.js";
+import { analyzeWithGemini, transcribeWithGemini } from "./lib/gemini.js";
 import { caregiverNetwork } from "./lib/caregiver.js";
 import { pushEscalation, pushConfigured } from "./lib/notify.js";
 import { runAllTests } from "./tests/qa_qc_runner.js";
@@ -19,7 +19,8 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(cors());
-app.use(express.json());
+// Larger limit so a few seconds of microphone audio fit in one JSON request.
+app.use(express.json({ limit: "4mb" }));
 app.use(express.static(path.join(__dirname, "public")));
 // Face-expression model is served locally so the demo works offline and video never leaves the device.
 app.use("/vendor/face-api", express.static(path.join(__dirname, "node_modules/@vladmandic/face-api/dist")));
@@ -93,6 +94,16 @@ app.post("/api/detect", async (req, res) => {
     incident,
     latencyMs
   });
+});
+
+// Live microphone: Gemini transcribes a short audio chunk. 204 means "not configured", so the
+// browser falls back to its own speech recognition.
+app.post("/api/transcribe", async (req, res) => {
+  const { audio, mimeType } = req.body || {};
+  if (!audio || typeof audio !== "string") return res.status(400).json({ error: "Base64 audio required." });
+  const text = await transcribeWithGemini(audio, mimeType);
+  if (text === null) return res.status(204).end();
+  res.json({ success: true, text });
 });
 
 // --- 3. ELEVENLABS EMPATHETIC VOICE INTERVENTION ---

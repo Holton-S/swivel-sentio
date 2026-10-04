@@ -344,14 +344,72 @@ function micUI() {
   $('mic-button').querySelector('span').textContent = state.listening ? 'Stop microphone' : 'Start microphone';
   $('guardian-listening').textContent = state.listening ? 'Listening gently · Call protection is on' : 'Microphone off · Ready when you are';
 }
-function stopMic() { clearTimeout(micTimer); state.listening = false; state.recognition?.stop(); micUI(); }
-const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-if (!Recognition) { $('mic-button').disabled = true; $('mic-status').textContent = 'Speech recognition is unavailable here. Type a transcript or use a scenario.'; }
-else {
-  const recognition = new Recognition(); state.recognition = recognition;
+// Live listening: the mic is recorded in short chunks, Gemini transcribes each chunk on our server,
+// and every new phrase is checked for scam pressure. This avoids the browser's own speech service,
+// which fails with "network" in some browsers (Brave) and on networks that block it.
+// Usage guards: chunks only while listening, hard stop after 90 seconds, and it stops on any pause.
+const MIC_CHUNK_MS = 6000, MIC_MAX_MS = 90000;
+const mic = { stream: null, recorder: null, timer: null, deadline: null, text: '', pending: 0, mode: null, recognition: null };
+function stopMic() {
+  clearTimeout(micTimer); clearTimeout(mic.timer); clearTimeout(mic.deadline);
+  state.listening = false;
+  if (mic.recorder && mic.recorder.state !== 'inactive') { try { mic.recorder.stop(); } catch { /* already stopped */ } }
+  mic.recorder = null;
+  mic.stream?.getTracks().forEach(track => track.stop()); mic.stream = null;
+  try { mic.recognition?.stop(); } catch { /* not running */ }
+  micUI();
+}
+async function transcribeChunk(blob) {
+  if (blob.size < 2000) return; // Silence or a fragment: nothing worth sending.
+  mic.pending++;
+  try {
+    const audio = await new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(String(reader.result).split(',')[1]); reader.onerror = reject; reader.readAsDataURL(blob); });
+    const response = await fetch('/api/transcribe', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ audio, mimeType: blob.type || 'audio/webm' }) });
+    if (response.status === 204) { stopMic(); startBrowserRecognition(); return; }
+    if (!response.ok) throw new Error(`Transcription returned ${response.status}`);
+    const { text } = await response.json();
+    if (text && text.trim()) {
+      mic.text = `${mic.text} ${text.trim()}`.trim().slice(-6000);
+      $('transcript').value = mic.text;
+      if (!state.locked) { state.analysis = null; updateCheckout(); }
+      $('mic-status').textContent = 'Listening. Each phrase is transcribed by Gemini and checked automatically.';
+      clearTimeout(micTimer);
+      micTimer = setTimeout(() => { if (!state.busy && !state.locked) checkTranscript(undefined, true); }, 300);
+    }
+  } catch (error) {
+    $('mic-status').textContent = `Could not transcribe that part (${error.message}). Still listening.`;
+  } finally { mic.pending--; }
+}
+function recordChunk() {
+  if (!state.listening || !mic.stream) return;
+  const type = ['audio/webm;codecs=opus', 'audio/webm', 'audio/ogg;codecs=opus'].find(t => window.MediaRecorder?.isTypeSupported?.(t)) || '';
+  const recorder = new MediaRecorder(mic.stream, type ? { mimeType: type } : undefined);
+  const parts = [];
+  recorder.ondataavailable = event => { if (event.data.size) parts.push(event.data); };
+  // Each chunk is its own complete recording, so it can be transcribed on its own.
+  recorder.onstop = () => { transcribeChunk(new Blob(parts, { type: recorder.mimeType || type || 'audio/webm' })); if (state.listening) recordChunk(); };
+  mic.recorder = recorder; recorder.start();
+  mic.timer = setTimeout(() => { if (recorder.state !== 'inactive') recorder.stop(); }, MIC_CHUNK_MS);
+}
+async function startServerListening() {
+  try {
+    mic.stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
+  } catch {
+    $('mic-status').textContent = 'Microphone permission was denied. Allow it in browser settings or type a transcript.'; return;
+  }
+  mic.mode = 'gemini'; mic.text = ''; state.listening = true; micUI();
+  $('mic-status').textContent = 'Listening. Speak, or play the call near the laptop. Gemini transcribes every few seconds.';
+  mic.deadline = setTimeout(() => { if (state.listening) { stopMic(); $('mic-status').textContent = 'Stopped after 90 seconds to save usage. Start again to keep listening.'; } }, MIC_MAX_MS);
+  recordChunk();
+}
+// Fallback when the server has no Gemini key: the browser's own speech recognition.
+function startBrowserRecognition() {
+  const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!Recognition) { $('mic-status').textContent = 'Speech recognition is unavailable here. Type a transcript or use a scenario.'; return; }
+  const recognition = new Recognition(); mic.recognition = recognition; mic.mode = 'browser';
   recognition.lang = 'en-US'; recognition.continuous = true; recognition.interimResults = true;
   let finalized = '';
-  recognition.onstart = () => { state.listening = true; micUI(); $('mic-status').textContent = 'Listening. Final speech is checked automatically.'; };
+  recognition.onstart = () => { state.listening = true; micUI(); $('mic-status').textContent = 'Listening (browser speech). Final speech is checked automatically.'; };
   recognition.onresult = event => {
     let interim = '', receivedFinal = false;
     for (let index = event.resultIndex; index < event.results.length; index++) {
@@ -363,14 +421,20 @@ else {
     if (receivedFinal) { clearTimeout(micTimer); micTimer = setTimeout(() => { if (!state.busy && !state.locked) checkTranscript(undefined, true); }, 900); }
   };
   recognition.onerror = event => { stopMic(); $('mic-status').textContent = event.error === 'not-allowed' ? 'Microphone permission was denied. Allow it in browser settings or type a transcript.' : `Microphone stopped (${event.error}). Try again or type a transcript.`; };
-  recognition.onend = () => { state.listening = false; micUI(); if ($('mic-status').textContent.startsWith('Listening')) $('mic-status').textContent = 'Microphone stopped. Start again to listen.'; };
-  $('mic-button').addEventListener('click', () => {
-    if (state.listening) { stopMic(); return; }
-    if (state.busy || state.locked) { notice('Finish the current review before starting the microphone.'); return; }
-    stopVoice(); finalized = ''; $('transcript').value = ''; state.analysis = null; updateCheckout();
-    try { recognition.start(); $('mic-status').textContent = 'Waiting for microphone permission…'; } catch { notice('Microphone is already starting. Please try again in a moment.'); }
-  });
+  recognition.onend = () => { state.listening = false; micUI(); };
+  try { recognition.start(); } catch { notice('Microphone is already starting. Please try again in a moment.'); }
 }
+if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) {
+  if (!(window.SpeechRecognition || window.webkitSpeechRecognition)) { $('mic-button').disabled = true; $('mic-status').textContent = 'Microphone is unavailable in this browser. Type a transcript or use a scenario.'; }
+}
+$('mic-button').addEventListener('click', () => {
+  if (state.listening) { stopMic(); $('mic-status').textContent = 'Microphone stopped. Start again to listen.'; return; }
+  if (state.busy || state.locked) { notice('Finish the current review before starting the microphone.'); return; }
+  stopVoice(); $('transcript').value = ''; state.analysis = null; updateCheckout();
+  $('mic-status').textContent = 'Waiting for microphone permission…';
+  if (navigator.mediaDevices?.getUserMedia && window.MediaRecorder) startServerListening(); else startBrowserRecognition();
+});
+document.addEventListener('visibilitychange', () => { if (document.hidden && state.listening) { stopMic(); $('mic-status').textContent = 'Microphone paused while you were away. Start again to listen.'; } });
 const VOICE_PACE = .88; // Speaking speed for the calming guide: 1 is normal, lower is slower.
 // Prefer neural voices (Edge "Natural", Chrome "Google") over the robotic Windows desktop voices.
 function bestVoice() {
